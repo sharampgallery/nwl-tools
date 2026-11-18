@@ -88,7 +88,7 @@
 </head>
 <body>
 <div class="top">
-  <div class="brand">NWL STUDIO<span>Flat Sketch Maker · ต้นแบบ v6</span></div>
+  <div class="brand">NWL STUDIO<span>Flat Sketch Maker · ต้นแบบ v7</span></div>
   <div class="row">
     <select id="pageMode" style="width:auto;padding:7px 10px;font-size:14px" title="ขนาดหน้าไฟล์ที่ดาวน์โหลด"><option value="a4">หน้ากระดาษ A4 แนวนอน</option><option value="fit">พอดีงาน (ไม่มีหน้ากระดาษ)</option></select>
     <label class="switch" style="margin:0"><input type="checkbox" id="transp"> PNG พื้นใส</label>
@@ -106,6 +106,24 @@
 
     <!-- ===== FLAT MODE ===== -->
     <div id="flatPanel">
+      <section class="card" id="workCard">
+        <h2>งานของฉัน · Work</h2>
+        <div class="fl" id="wkCur" style="font-size:15px">งานนี้ยังไม่ได้บันทึก</div>
+        <div class="row" style="margin-top:10px"><input type="text" id="wkName" placeholder="ตั้งชื่องาน เช่น Stonewear Tee ลายหลัง v2" style="flex:1"></div>
+        <div class="row" style="margin-top:8px">
+          <button class="primary" id="wkSave">บันทึกงานนี้</button>
+          <button id="wkSaveNew">บันทึกเป็นงานใหม่</button>
+          <button id="wkNew">เริ่มงานใหม่</button>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button class="small" id="wkFile">บันทึกเป็นไฟล์ (.nwlflat)</button>
+          <button class="small" id="wkOpenFile">เปิดไฟล์งาน</button>
+          <input type="file" id="wkFileIn" accept=".nwlflat,.json,application/json" hidden>
+        </div>
+        <div id="wkList" style="margin-top:10px"></div>
+        <p class="hint">"งาน" เก็บดีไซน์ทั้งชุด: ทรง วิธีเย็บ ข้อมูลแบบ ผ้า ลายสกรีน และสีที่เปลี่ยน ต่างจาก "คลังทรง" ที่เก็บแค่ทรงต้นแบบ · งานเก็บในเบราว์เซอร์เครื่องนี้ งานสำคัญให้กด "บันทึกเป็นไฟล์" แล้วเก็บไว้ใน Drive ด้วย ส่งไฟล์ให้ทีมเปิดต่อได้</p>
+      </section>
+
       <section class="card">
         <h2><span class="step">1</span>ชนิดสินค้า</h2>
         <select id="type"></select>
@@ -494,7 +512,7 @@ let state=defaults();
   for(const t in T){ if(s.params&&s.params[t]) Object.assign(state.params[t],s.params[t]); if(s.edited&&s.edited[t]) state.edited[t]=s.edited[t]; if(s.info&&s.info[t]) Object.assign(state.info[t],s.info[t]);
     if(s.cons&&s.cons[t]) Object.assign(state.cons[t],s.cons[t]); if(s.consSet&&s.consSet[t]) state.consSet[t]=s.consSet[t]; }
   if(s.style){ Object.assign(state.style,s.style); if(s.style.dims===true) state.style.dims='pom'; if(s.style.dims===false) state.style.dims='off'; }
-  if(s.body) Object.assign(state.body,s.body); if(s.notes) state.notes=s.notes;
+  if(s.body) Object.assign(state.body,s.body); if(s.notes) state.notes=s.notes; if(s.work) state.work=s.work;
   if(Array.isArray(s.looks)&&s.looks.length) state.looks=s.looks;
   if(!T[state.type]) state.type='zip'; if(state.mode!=='look') state.mode='flat';
 })();
@@ -1379,7 +1397,7 @@ function onField(e){
 $('fieldsMain').addEventListener('input',onField); $('fieldsDetail').addEventListener('input',onField);
 $('fieldsMain').addEventListener('keydown',enterNext); $('fieldsDetail').addEventListener('keydown',enterNext);
 function enterNext(e){ if(e.key!=='Enter') return; const all=[...document.querySelectorAll('#flatPanel .fields input')]; const i=all.indexOf(e.target); if(i>=0&&all[i+1]){ e.preventDefault(); all[i+1].focus(); all[i+1].select(); } }
-$('type').addEventListener('change',e=>{ state.type=e.target.value; buildFields(); render(); });
+$('type').addEventListener('change',e=>{ state.type=e.target.value; if(state.work&&state.work.type!==state.type) state.work=null; buildFields(); syncFab(); render(); if(typeof wkRender==='function') wkRender(); });
 $('ang').addEventListener('input',e=>{ state.params[state.type].ANG=+e.target.value; $('angV').textContent=e.target.value+'°'; render(); });
 for(const [id,k] of [['infName','name'],['infVer','ver'],['infSize','size']]) $(id).addEventListener('input',e=>{ state.info[state.type][k]=e.target.value.trim(); render(); });
 
@@ -1788,6 +1806,75 @@ stage.addEventListener('pointermove',ev=>{ if(!pdrag) return; ev.stopImmediatePr
   render(); $('prY').value=fmt(pr.y); $('prX').value=fmt(pr.x); },true);
 stage.addEventListener('pointerup',ev=>{ if(!pdrag) return; ev.stopImmediatePropagation(); pdrag=null; prSave(); buildPrints(); },true);
 
+/* ---------- งานทั้งชุด (Work) ----------
+   เก็บใน IndexedDB (จุได้มากกว่า localStorage ที่ราว 5 MB) ถ้าเบราว์เซอร์ไม่ให้ใช้ จะเก็บไว้ชั่วคราวในหน้าและแนะนำให้บันทึกเป็นไฟล์
+   งาน = snapshot ของชนิดสินค้าที่กำลังแก้: ทรง วิธีเย็บ ข้อมูลแบบ หมายเหตุ ผ้า ลายสกรีน(+สี) และการตั้งค่าเส้น/มุมมอง */
+const WK={db:null,ok:true,mem:[],list:[]};
+function wkOpenDB(){ return new Promise((res,rej)=>{ try{ const r=indexedDB.open('nwl-flat-works',1);
+  r.onupgradeneeded=()=>r.result.createObjectStore('works',{keyPath:'id'}); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error||new Error('idb')); }catch(e){ rej(e); } }); }
+async function wkDB(){ if(!WK.ok) return null; if(WK.db) return WK.db; try{ WK.db=await wkOpenDB(); return WK.db; }catch(e){ WK.ok=false; return null; } }
+function wkReq(store,mode,fn){ return new Promise((res,rej)=>{ const tx=WK.db.transaction('works',mode), q=fn(tx.objectStore('works')); tx.oncomplete=()=>res(q&&q.result); tx.onerror=()=>rej(tx.error); }); }
+async function wkAll(){ const db=await wkDB(); if(!db) return WK.mem.slice(); return (await wkReq('works','readonly',s=>s.getAll()))||[]; }
+async function wkPut(w){ const db=await wkDB(); if(!db){ WK.mem=WK.mem.filter(x=>x.id!==w.id).concat([w]); return false; } await wkReq('works','readwrite',s=>s.put(w)); return true; }
+async function wkDel(id){ const db=await wkDB(); if(!db){ WK.mem=WK.mem.filter(x=>x.id!==id); return; } await wkReq('works','readwrite',s=>s.delete(id)); }
+function snapshot(){ const t=state.type, clone=o=>o==null?o:JSON.parse(JSON.stringify(o));
+  return {app:'NWL Flat Sketch',v:1,type:t,params:clone(state.params[t]),edited:clone(state.edited[t]),info:clone(state.info[t]),cons:clone(state.cons[t]),consSet:clone(state.consSet[t]),notes:state.notes[t]||'',
+    fabric:clone(fabrics[t]||null),prints:(prints[t]||[]).map(p=>{ const o=Object.assign({},p); delete o._rc; return o; }),style:clone(state.style)}; }
+function syncStyleUI(){ const s=state.style; $('lw').value=s.lw; $('lwV').textContent=(+s.lw).toFixed(3)+'″'; $('cLine').value=s.line; $('cFill').value=s.fill;
+  for(const k of ['stitch','shade','grid','bar','tblock','ghost','guides','ctags']) $(k).checked=!!s[k];
+  for(const [id,k] of [['segViews','views'],['segDims','dims']]) $(id).querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===s[k]));
+  $('pageMode').value=s.page||'a4'; }
+function afterTypeLoad(){ $('type').value=state.type; printSel=null; saveFab(); savePrints(); save(); buildFields(); syncStyleUI(); syncFab(); refreshRecolors(); render(); }
+function applySnapshot(d){
+  const t=d&&d.type; if(!T[t]) throw new Error('ไฟล์งานนี้อ่านไม่ได้');
+  state.type=t; state.params[t]=Object.assign(defaults().params[t],d.params||{}); state.edited[t]=d.edited||{};
+  state.info[t]=Object.assign({name:'',ver:'v1',size:''},d.info||{}); state.cons[t]=Object.assign(consDefaults(t),d.cons||{}); state.consSet[t]=d.consSet||{}; state.notes[t]=d.notes||'';
+  if(d.fabric) fabrics[t]=d.fabric; else delete fabrics[t];
+  prints[t]=(d.prints||[]).map(p=>Object.assign({},p));
+  if(d.style) Object.assign(state.style,d.style);
+  afterTypeLoad();
+}
+async function wkThumb(){ try{ const r=flatInner(true), k=320/r.vb[2], s=svgWrap(r.inner,r.vb,k), im=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s));
+  const c=document.createElement('canvas'); c.width=320; c.height=Math.max(1,Math.round(r.vb[3]*k)); const g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(im,0,0,c.width,c.height); return c.toDataURL('image/jpeg',0.8); }catch(e){ return ''; } }
+const wkDate=ts=>{ const d=new Date(ts); return d.toLocaleDateString('th-TH',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); };
+async function wkRender(){
+  WK.list=(await wkAll()).sort((a,b)=>b.saved-a.saved); const cur=state.work;
+  $('wkCur').innerHTML=cur?`กำลังแก้: <b>${esc(cur.name)}</b> <small>บันทึกล่าสุด ${wkDate(cur.saved)}</small>`:'งานนี้ยังไม่ได้บันทึก';
+  if(cur&&!$('wkName').matches(':focus')) $('wkName').value=cur.name;
+  $('wkList').innerHTML=WK.list.length?WK.list.map(w=>`<div class="lib-item"${cur&&cur.id===w.id?' style="background:#f3f8fe"':''}>${w.thumb?`<img src="${w.thumb}" alt="" style="width:56px;height:40px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:4px">`:''}<div class="nm">${esc(w.name)}<small>${esc(T[w.type]?T[w.type].name:w.type)} · ${wkDate(w.saved)}${(w.data.prints||[]).length?` · ลาย ${w.data.prints.length}`:''}${w.data.fabric?' · มีผ้า':''}</small></div>
+    <button class="small" data-wopen="${w.id}">เปิด</button><button class="small" data-wfile="${w.id}">ไฟล์</button><button class="small" data-wdel="${w.id}">ลบ</button></div>`).join(''):'<p class="empty">ยังไม่มีงานที่บันทึก</p>';
+  if(!WK.ok) $('wkList').insertAdjacentHTML('beforeend','<p class="hint" style="color:var(--warn)">หน้านี้เก็บงานในเบราว์เซอร์ไม่ได้ (เช่น เปิดในแถบของ Claude) งานในรายการจะหายเมื่อปิดหน้า ให้กด "บันทึกเป็นไฟล์" หรือเปิดใน Safari/Chrome</p>');
+}
+async function wkSaveAs(asNew){
+  if(state.mode!=='flat') setMode('flat');
+  const t=state.type, typed=$('wkName').value.trim(), cur=state.work&&!asNew?state.work:null;
+  const name=typed||(cur&&cur.name)||state.info[t].name||`${T[t].name} ${new Date().toLocaleDateString('th-TH')}`;
+  const w={id:cur?cur.id:'w'+Date.now().toString(36),name,type:t,saved:Date.now(),thumb:await wkThumb(),data:snapshot()};
+  const stored=await wkPut(w); state.work={id:w.id,name:w.name,saved:w.saved,type:w.type}; save(); await wkRender();
+  toast(stored?(cur?`บันทึกทับ "${name}" แล้ว`:`บันทึกงานใหม่ "${name}" แล้ว`):'บันทึกไว้ชั่วคราว ปิดหน้าแล้วจะหาย ให้กด "บันทึกเป็นไฟล์" ด้วย');
+}
+function wkDownload(w){ const n=(w.name||'NWL-work').replace(/[\\/:*?"<>|]+/g,'_'); download(new Blob([JSON.stringify({app:'NWL Flat Sketch',v:1,name:w.name,saved:w.saved,data:w.data})],{type:'application/json'}),n+'.nwlflat'); }
+$('wkSave').onclick=()=>wkSaveAs(false);
+$('wkSaveNew').onclick=()=>wkSaveAs(true);
+$('wkNew').onclick=e=>{ if(!armed(e.currentTarget,'กดอีกครั้ง (งานที่ยังไม่บันทึกจะหาย)')) return;
+  const t=state.type, d=defaults(); state.params[t]=d.params[t]; state.edited[t]={}; state.info[t]=d.info[t]; state.cons[t]=d.cons[t]; state.consSet[t]={}; state.notes[t]='';
+  delete fabrics[t]; prints[t]=[]; state.work=null; $('wkName').value=''; afterTypeLoad(); wkRender(); toast(`เริ่ม${T[t].name}ใหม่แล้ว`); };
+$('wkFile').onclick=async()=>{ const t=state.type, name=$('wkName').value.trim()||(state.work&&state.work.name)||state.info[t].name||T[t].name; wkDownload({name,saved:Date.now(),data:snapshot()}); toast('ดาวน์โหลดไฟล์งานแล้ว เก็บไว้ใน Drive หรือส่งให้ทีมเปิดต่อได้'); };
+$('wkOpenFile').onclick=()=>$('wkFileIn').click();
+$('wkFileIn').onchange=async e=>{ const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  try{ const j=JSON.parse(await f.text()); if(!j||j.app!=='NWL Flat Sketch'||!j.data) throw new Error('ไม่ใช่ไฟล์งานของ Flat Sketch Maker');
+    if(state.mode!=='flat') setMode('flat');
+    applySnapshot(j.data); const w={id:'w'+Date.now().toString(36),name:j.name||f.name.replace(/\.[^.]+$/,''),type:j.data.type,saved:Date.now(),thumb:'',data:j.data};
+    w.thumb=await wkThumb(); await wkPut(w); state.work={id:w.id,name:w.name,saved:w.saved,type:w.type}; save(); await wkRender(); toast(`เปิดไฟล์งาน "${w.name}" แล้ว`);
+  }catch(err){ toast(err&&err.message?err.message:'เปิดไฟล์นี้ไม่ได้'); } };
+$('wkList').addEventListener('click',async e=>{ const o=e.target.dataset.wopen, f=e.target.dataset.wfile, d=e.target.dataset.wdel;
+  const w=WK.list.find(x=>x.id===(o||f||d)); if(!w) return;
+  if(o){ if(!(state.work&&state.work.id===o)&&!armed(e.target,'กดอีกครั้งเพื่อเปิด')) return;
+    if(state.mode!=='flat') setMode('flat'); applySnapshot(w.data); state.work={id:w.id,name:w.name,saved:w.saved,type:w.type}; $('wkName').value=w.name; save(); await wkRender(); toast(`เปิดงาน "${w.name}" แล้ว`); }
+  if(f) wkDownload(w);
+  if(d&&armed(e.target,'กดอีกครั้งเพื่อลบ')){ await wkDel(d); if(state.work&&state.work.id===d) state.work=null; save(); await wkRender(); toast('ลบงานแล้ว (ไฟล์ .nwlflat ที่ดาวน์โหลดไว้ยังอยู่)'); }
+});
+
 /* ---------- คลังทรง ---------- */
 function renderLib(){
   if(!lib.length){ $('libList').innerHTML='<p class="empty">ยังไม่มีทรงในคลัง ลองบันทึกทรงแรก</p>'; return; }
@@ -1833,7 +1920,7 @@ function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show
 
 /* ---------- เริ่ม ---------- */
 buildTypeSelect(); $('type').value=state.type; buildFields(); bindStyle(); renderLib(); setMode(state.mode);
-refreshRecolors();
+refreshRecolors(); wkRender();
 </script>
 </body>
 </html>
