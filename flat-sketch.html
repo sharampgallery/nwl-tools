@@ -48,6 +48,8 @@
   .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .fields.cons{grid-template-columns:1fr 200px}
   .fields.cons select{padding:6px 8px;font-size:13px}
+  button.okbtn{border:1px solid #f0c9a0;cursor:pointer;font:inherit;font-size:10.5px;font-weight:700;padding:1px 7px;line-height:1.4}
+  button.okbtn:hover{background:#ffe2c2}
   .ctag{display:inline-flex;width:18px;height:18px;background:#111;color:#fff;border-radius:4px;font-size:11px;font-weight:700;align-items:center;justify-content:center;margin-right:6px;vertical-align:1px}
   .badge{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:99px;margin-left:6px;vertical-align:1px;font-weight:700;white-space:nowrap}
   .badge.s{background:var(--warnbg);color:var(--warn)}
@@ -125,7 +127,8 @@
         <label class="f">หมายเหตุเพิ่มเติม (บรรทัดละ 1 ข้อ จะขึ้นท้ายตารางวิธีเย็บ)</label>
         <textarea id="consNotes" rows="3" placeholder="เช่น ซิป YKK #5 สีดำ&#10;ริบ 1×1 คอตตอน 95%&#10;ป้ายคอพิมพ์ ไม่เย็บป้าย" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;resize:vertical"></textarea>
         <label class="switch"><input type="checkbox" id="ctags"> แสดงหมายเลขจุดเย็บ ■ และตารางวิธีเย็บในภาพ</label>
-        <p class="hint"><span class="badge s">ยังไม่ยืนยัน</span> = ค่าตั้งต้น ในตารางวิธีเย็บจะขึ้น [TBC] จนกว่าจะเลือกเอง · ตะเข็บคู่/สามจะห่างกันตาม "ระยะห่างระหว่างแถว"</p>
+        <div class="row" style="margin-top:10px"><button class="small" id="consOkAll">ยืนยันทุกข้อตามที่เลือกอยู่</button></div>
+        <p class="hint"><span class="badge s">ยังไม่ยืนยัน</span> = ยังเป็นค่าตั้งต้น ในตารางวิธีเย็บจะขึ้น [TBC] ถ้าค่าที่เลือกอยู่ถูกแล้ว (ตรงกับค่าตั้งต้น) ให้กดที่ป้ายเพื่อยืนยัน หรือกด "ยืนยันทุกข้อ" ทีเดียว · ตะเข็บคู่/สามจะห่างกันตาม "ระยะห่างระหว่างแถว"</p>
       </section>
 
       <section class="card">
@@ -211,6 +214,11 @@
           <div class="rv"><span>ความเข้มลายผ้า (ลดลงให้เส้นอ่านง่าย)</span><b id="fbToneV"></b></div>
           <input type="range" id="fbTone" min="40" max="100" step="1">
           <label class="switch"><input type="checkbox" id="fbDepth"> เงามิติ: ข้างลำตัว ใต้แขน ใต้คอ/ฮู้ด ปากกระเป๋า</label>
+          <div class="rv"><span>ความเข้มเงามิติ</span><b id="fbDkV"></b></div>
+          <input type="range" id="fbDk" min="0" max="100" step="5">
+          <div class="rv"><span>ความเข้มด้านในฮู้ด/คอ</span><b id="fbIkV"></b></div>
+          <input type="range" id="fbIk" min="0" max="100" step="5">
+          <p class="hint">เงาเข้มเกินจะทำให้สีผ้าดูเพี้ยน ค่าตั้งต้น 60% และ 50% ลดลงได้ถ้าอยากเห็นสีผ้าตรงกว่า</p>
           <label class="f">ด้านในฮู้ด / ด้านในคอ</label>
           <div class="seg" id="fbIn"><button data-v="same">ลายเดียวกัน + เงา (ผ้าทอลาย)</button><button data-v="base">สีพื้นหลังผ้า (ผ้าพิมพ์ลาย)</button><button data-v="contrast">ผ้าซับในคนละสี</button></div>
           <label class="f">จั๊ม ปก และขอบริบ</label>
@@ -494,13 +502,14 @@ function styler(fab,fid){
   const s=state.style, lw=+s.lw, grain=fab&&fab.slv!=='body';
   const lm=fab?(fab.lineMode||'halo'):'plain', line=lm==='white'?'#ffffff':s.line, halo=lm==='halo'?'#ffffff':lm==='white'?'#111111':null;
   const auto=fab&&fab.autoColor||'#555555';
+  const dk=fab?(fab.depthK==null?0.6:+fab.depthK):0, ik=fab?(fab.inK==null?0.5:+fab.inK):0; // ความเข้มเงามิติ / ความเข้มด้านใน (0–1)
   const trim=fab&&(fab.trim||'solid')==='solid'?(fab.trimColor||auto):null;
   let shade;
   if(!fab) shade=s.shade?shadeOf(s.fill,s.line):s.fill;
   else { const ins=fab.inside||'same';
-    shade= ins==='same'?`url(#${fid}S)` : mixHex(fab.inColor||(ins==='base'?mixHex(auto,'#ffffff',0.6):'#2b2b2b'),'#000000',0.22); }
+    shade= ins==='same'?`url(#${fid}S)` : mixHex(fab.inColor||(ins==='base'?mixHex(auto,'#ffffff',0.6):'#2b2b2b'),'#000000',0.45*ik); }
   return {
-    fill:s.fill, line, lw, body:fab?`url(#${fid})`:s.fill, trim, depth:!!fab&&fab.depth!==false,
+    fill:s.fill, line, lw, body:fab?`url(#${fid})`:s.fill, trim, dk, depth:!!fab&&fab.depth!==false&&dk>0,
     slvR:grain?`url(#${fid}R)`:null, slvL:grain?`url(#${fid}L)`:null,
     shade, fillOp: photo&&state.mode==='flat'?0.12:1,
     shape(d,fill){ const f=fill||this.body;
@@ -515,8 +524,8 @@ function styler(fab,fid){
     trimFill(d){ return trim?`<path d="${d}" fill="${trim}" stroke="none"/>`:''; },
     // เงาแบบไล่ระดับ ตัดตามรูปทรง (clip)
     clipShade(path,body){ if(!this.depth) return ''; const c=uid(); return `<defs><clipPath id="${c}"><path d="${path}"/></clipPath></defs><g clip-path="url(#${c})" style="pointer-events:none">${body}</g>`; },
-    lin(x1,y1,x2,y2,stops){ const g=uid(); return {id:g,def:`<linearGradient id="${g}" gradientUnits="userSpaceOnUse" x1="${fx(x1)}" y1="${fx(y1)}" x2="${fx(x2)}" y2="${fx(y2)}">${stops.map(s=>`<stop offset="${s[0]}" stop-color="${s[2]||'#000'}" stop-opacity="${s[1]}"/>`).join('')}</linearGradient>`}; },
-    rad(cx,cy,r,op,sy=1){ const g=uid(); return {id:g,def:`<radialGradient id="${g}" gradientUnits="userSpaceOnUse" cx="${fx(cx)}" cy="${fx(cy)}" r="${fx(r)}" gradientTransform="translate(0 ${fx(cy)}) scale(1 ${sy}) translate(0 ${fx(-cy)})"><stop offset="0" stop-color="#000" stop-opacity="${op}"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>`}; },
+    lin(x1,y1,x2,y2,stops){ const g=uid(); return {id:g,def:`<linearGradient id="${g}" gradientUnits="userSpaceOnUse" x1="${fx(x1)}" y1="${fx(y1)}" x2="${fx(x2)}" y2="${fx(y2)}">${stops.map(s=>`<stop offset="${s[0]}" stop-color="${s[2]||'#000'}" stop-opacity="${fx(s[1]*(s[2]?1:this.dk))}"/>`).join('')}</linearGradient>`}; },
+    rad(cx,cy,r,op,sy=1){ const g=uid(); return {id:g,def:`<radialGradient id="${g}" gradientUnits="userSpaceOnUse" cx="${fx(cx)}" cy="${fx(cy)}" r="${fx(r)}" gradientTransform="translate(0 ${fx(cy)}) scale(1 ${sy}) translate(0 ${fx(-cy)})"><stop offset="0" stop-color="#000" stop-opacity="${fx(op*this.dk)}"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>`}; },
   };
 }
 const BIG='x="-300" y="-300" width="600" height="600"';
@@ -726,7 +735,7 @@ function buildTop(type,p,o,S){
       const yb=RB>0?yr:L-1.6, yt=yb-p.PH, pt_=C*0.2, pb=C*0.36, yo=yt+p.PH*0.62;
       const nP=nRows(K.s_pkt);
       const openPath=(sg,q)=>`M${pt([sg*(pt_-q),yt+0.05])} C${pt([sg*(pt_+0.6-q),yt+p.PH*0.25])} ${pt([sg*(pb-0.9-q),yt+p.PH*0.45])} ${pt([sg*(pb-q),yo+0.1])}`;
-      const openRows=sg=>rows(nP,q=>openPath(sg,q),0.3,gap)+(S.depth?`<path d="${openPath(sg,0.16)}" fill="none" stroke="#000" stroke-opacity=".22" stroke-width="0.3" stroke-linecap="round"/>`:'');
+      const openRows=sg=>rows(nP,q=>openPath(sg,q),0.3,gap)+(S.depth?`<path d="${openPath(sg,0.16)}" fill="none" stroke="#000" stroke-opacity="${fx(0.22*S.dk)}" stroke-width="0.3" stroke-linecap="round"/>`:'');
       const pk=K.pkt||'kanga';
       if(pk==='side'){
         for(const sg of [-1,1]){ const a=[sg*(C/2-3.0),yb-p.PH], b=[sg*(C/2-1.0),yb-1.2];
@@ -961,7 +970,7 @@ function fabDefs(f,id,ctx){ // pattern ขนาดจริงเป็นน�
   const tr=`translate(${fx(+f.ox||0)} ${fx((+f.oy||0)+(centre?ya:0))}) rotate(${fx(+f.rot||0)})${base}`;
   const pat=(pid,extra,t)=>`<pattern id="${pid}" patternUnits="userSpaceOnUse" x="0" y="0" width="${fx(pw)}" height="${fx(ph)}" patternTransform="${t||tr}">${tile}${extra}</pattern>`;
   let s=`<defs><image id="${id}I" href="${f.tile&&f.rep?f.tile:f.src}" x="0" y="0" width="${fx(W+e)}" height="${fx(H+e)}" preserveAspectRatio="none"/>`
-    +pat(id,TONE)+pat(id+'S',TONE+`<rect width="${fx(pw)}" height="${fx(ph)}" fill="#000" opacity=".38"/>`);
+    +pat(id,TONE)+pat(id+'S',TONE+`<rect width="${fx(pw)}" height="${fx(ph)}" fill="#000" opacity="${fx(0.75*(f.inK==null?0.5:+f.inK))}"/>`);
   // แขน: แนวผ้า (เส้นยืน) วิ่งตามแนวแขนจากไหล่ถึงปลายแขน แบบที่ตัดเย็บจริง
   if(ctx&&ctx.sleeves) for(const sv of ctx.sleeves)
     s+=pat(id+sv.s,TONE,`translate(${fx(sv.a[0])} ${fx(sv.a[1])}) rotate(${fx(sv.ang+(+f.rot||0))}) translate(${fx(-pw/2)} ${fx(-ph/2)})`);
@@ -1174,6 +1183,7 @@ function syncFab(){
   seg('fbLine',f.lineMode||'halo'); seg('fbIn',f.inside||'same'); seg('fbTrim',f.trim||'solid');
   const tone=f.tone==null?0.85:+f.tone; $('fbTone').value=Math.round(tone*100); $('fbToneV').textContent=Math.round(tone*100)+'%';
   $('fbDepth').checked=f.depth!==false;
+  for(const [id,k,def] of [['fbDk','depthK',0.6],['fbIk','inK',0.5]]){ const v=f[k]==null?def:+f[k]; $(id).value=Math.round(v*100); $(id+'V').textContent=Math.round(v*100)+'%'; }
   const auto=f.autoColor||'#555555';
   $('fbTrimC').value=f.trimColor||auto; $('fbInC').value=f.inColor||((f.inside==='base')?mixHex(auto,'#ffffff',0.6):'#2b2b2b');
   $('fbInCBox').classList.toggle('hide',(f.inside||'same')==='same');
@@ -1185,6 +1195,7 @@ $('fbCenter').addEventListener('change',e=>fabSet('center',e.target.checked,true
 for(const [id,k] of [['fbLine','lineMode'],['fbIn','inside'],['fbTrim','trim']]) $(id).addEventListener('click',e=>{ const v=e.target.dataset.v; if(!v) return; if(k==='inside'){ const f=fabOf(state.type); if(f) delete f.inColor; } fabSet(k,v,true); });
 $('fbTone').addEventListener('input',e=>{ $('fbToneV').textContent=e.target.value+'%'; fabSet('tone',+e.target.value/100); });
 $('fbDepth').addEventListener('change',e=>fabSet('depth',e.target.checked));
+for(const [id,k] of [['fbDk','depthK'],['fbIk','inK']]) $(id).addEventListener('input',e=>{ $(id+'V').textContent=e.target.value+'%'; fabSet(k,+e.target.value/100); });
 $('fbTrimC').addEventListener('input',e=>fabSet('trimColor',e.target.value));
 $('fbInC').addEventListener('input',e=>fabSet('inColor',e.target.value));
 $('fbAutoC').onclick=()=>{ const f=fabOf(state.type); if(!f) return; delete f.trimColor; delete f.inColor; delete f.autoColor; fabSaved(); syncFab(); render(); };
@@ -1280,12 +1291,17 @@ $('fbMode').addEventListener('click',e=>{ const v=e.target.dataset.v; if(v) fabS
 function buildCons(){
   const t=state.type, K=state.cons[t], set=state.consSet[t], nums=tagNums(t,K); $('consNotes').value=state.notes[t]||'';
   $('consBox').innerHTML=consVisible(t,K).map(c=>{
-    const badge=set[c.k]?'':'<span class="badge s">ยังไม่ยืนยัน</span>', tag=nums[c.k]?`<span class="ctag">${nums[c.k]}</span>`:'';
+    const badge=set[c.k]?'':`<button type="button" class="badge s okbtn" data-ok="${c.k}" title="ค่าที่เลือกอยู่ตรงกับค่าตั้งต้น กดเพื่อยืนยันว่าใช้ค่านี้จริง">ยังไม่ยืนยัน · กดยืนยัน</button>`, tag=nums[c.k]?`<span class="ctag">${nums[c.k]}</span>`:'';
     let ctl;
     if(c.type==='chk') ctl=`<label class="switch" style="margin:0"><input type="checkbox" data-c="${c.k}" ${K[c.k]?'checked':''}> ${K[c.k]?'มี':'ไม่มี'}</label>`;
     else { const op=c.type==='st'?ST_OPTS:c.opts; ctl=`<select data-c="${c.k}">${op.map(o=>`<option value="${o[0]}"${String(K[c.k])===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select>`; }
     return `<div class="fl">${tag}${c.label}${badge}<small>${c.en}</small></div>${ctl}`; }).join('');
+  const left=consVisible(t,K).filter(c=>!set[c.k]).length;
+  $('consOkAll').classList.toggle('hide',!left); $('consOkAll').textContent=`ยืนยันทุกข้อตามที่เลือกอยู่ (เหลือ ${left} ข้อ)`;
 }
+/* ค่าที่ตรงกับค่าตั้งต้น เลือกซ้ำใน dropdown จะไม่นับว่าเปลี่ยน จึงต้องมีปุ่มยืนยันแยก */
+$('consBox').addEventListener('click',e=>{ const k=e.target.dataset.ok; if(!k) return; e.preventDefault(); state.consSet[state.type][k]=true; buildCons(); render(); });
+$('consOkAll').onclick=()=>{ const t=state.type; for(const c of consVisible(t)) state.consSet[t][c.k]=true; buildCons(); render(); toast('ยืนยันวิธีเย็บทุกข้อแล้ว [TBC] จะหายจากตาราง'); };
 $('consNotes').addEventListener('input',e=>{ state.notes[state.type]=e.target.value; render(); });
 $('consBox').addEventListener('change',e=>{ const k=e.target.dataset.c; if(!k) return; const t=state.type;
   state.cons[t][k]=e.target.type==='checkbox'?e.target.checked:e.target.value; state.consSet[t][k]=true; buildCons(); render(); });
