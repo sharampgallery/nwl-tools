@@ -1,0 +1,1429 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NWL Flat Sketch Maker</title>
+<style>
+  :root{
+    --bg:#f3f2ef; --panel:#ffffff; --ink:#111111; --muted:#6e6c68; --line:#dddad4;
+    --soft:#f7f6f3; --warn:#9a3c00; --warnbg:#fff3e6; --ok:#1f6f3f; --okbg:#e7f3ec;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Helvetica Neue",Helvetica,Arial,Thonburi,"Noto Sans Thai",sans-serif;font-size:15px;line-height:1.45}
+  .top{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 24px;background:#fff;border-bottom:1px solid var(--line)}
+  .brand{font-weight:800;letter-spacing:.02em;font-size:17px}
+  .brand span{font-weight:400;color:var(--muted);margin-left:8px;font-size:14px}
+  .wrap{display:grid;grid-template-columns:minmax(340px,460px) minmax(0,1fr);gap:24px;padding:24px;max-width:1600px;margin:0 auto}
+  @media (max-width:920px){.wrap{grid-template-columns:1fr;padding:16px}.top{padding:12px 16px}}
+  section.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+  .card h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:700}
+  .step{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:11px;
+    align-items:center;justify-content:center;margin-right:8px;vertical-align:1px}
+  label.f{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+  input[type=text],input[type=number],select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+  input:focus,select:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:var(--ink)}
+  button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 12px}
+  button:hover{background:var(--soft)}
+  button.primary{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700;padding:10px 18px}
+  button.primary:hover{background:#333}
+  button.small{padding:4px 10px;font-size:13px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .hint{font-size:13px;color:var(--muted);margin:8px 0 0}
+  .tabs{display:flex;gap:4px;background:#e9e7e2;padding:4px;border-radius:10px;margin-bottom:16px}
+  .tabs button{flex:1;border:0;background:transparent;padding:9px;font-weight:700;color:var(--muted)}
+  .tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+  .seg{display:flex;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:6px}
+  .seg button{flex:1;border:0;border-radius:0;padding:7px 6px;font-size:13px;color:var(--muted)}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button.on{background:var(--ink);color:#fff}
+  .fields{display:grid;grid-template-columns:1fr 86px;gap:8px 12px;align-items:center}
+  .fl{font-size:14px;font-weight:600}
+  .fl small{display:block;color:var(--muted);font-size:12px;font-weight:400;line-height:1.3}
+  .fields input{width:86px;padding:7px 8px;text-align:center}
+  .fields input.bad{border-color:#c0352b;outline-color:#c0352b}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .fields.cons{grid-template-columns:1fr 200px}
+  .fields.cons select{padding:6px 8px;font-size:13px}
+  .ctag{display:inline-flex;width:18px;height:18px;background:#111;color:#fff;border-radius:4px;font-size:11px;font-weight:700;align-items:center;justify-content:center;margin-right:6px;vertical-align:1px}
+  .badge{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:99px;margin-left:6px;vertical-align:1px;font-weight:700;white-space:nowrap}
+  .badge.s{background:var(--warnbg);color:var(--warn)}
+  .badge.r{background:var(--okbg);color:var(--ok)}
+  details{margin-top:12px}
+  details summary{cursor:pointer;font-size:13px;color:var(--muted);margin-bottom:10px}
+  .switch{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px}
+  input[type=range]{width:100%}
+  .rv{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:10px}
+  .rv b{color:var(--ink)}
+  .colors{display:flex;gap:16px;margin-top:10px;font-size:13px;color:var(--muted)}
+  .colors label{display:flex;align-items:center;gap:6px}
+  input[type=color]{width:34px;height:26px;border:1px solid var(--line);border-radius:6px;padding:0;background:#fff}
+  .preview{position:sticky;top:76px;align-self:start}
+  .stage{background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 10px 30px rgba(0,0,0,.08);overflow:hidden}
+  .stage svg{display:block;width:100%;height:calc(100vh - 170px);min-height:420px;touch-action:none}
+  .stage.cal svg{cursor:crosshair}
+  .stage.drag svg{cursor:move}
+  .pv-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 10px;color:var(--muted);font-size:13px;flex-wrap:wrap}
+  .lib-item,.look-item{display:flex;align-items:center;gap:6px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+  .lib-item .nm{flex:1;min-width:0}
+  .lib-item .nm small{display:block;color:var(--muted);font-size:12px}
+  .look-item{flex-wrap:wrap}
+  .look-item b{width:100%;font-size:13px}
+  .look-item select{flex:1;min-width:140px;padding:6px 8px;font-size:13px}
+  .look-item input{width:70px;padding:6px 8px;font-size:13px}
+  .empty{font-size:13px;color:var(--muted)}
+  ul.sum{margin:0;padding-left:18px;font-size:14px}
+  ul.sum li{margin:4px 0}
+  .sumh{font-weight:700;font-size:13px;margin:10px 0 2px}
+  .hide{display:none!important}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;
+    font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">NWL STUDIO<span>Flat Sketch Maker · ต้นแบบ v5</span></div>
+  <div class="row">
+    <label class="switch" style="margin:0"><input type="checkbox" id="transp"> PNG พื้นใส</label>
+    <button id="dlSvg">ดาวน์โหลด SVG</button>
+    <button class="primary" id="dlPng">ดาวน์โหลด PNG</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="panel">
+    <div class="tabs">
+      <button id="tabFlat" class="on">ทรงเดี่ยว (Flat)</button>
+      <button id="tabLook">ไลน์อัปบนหุ่น</button>
+    </div>
+
+    <!-- ===== FLAT MODE ===== -->
+    <div id="flatPanel">
+      <section class="card">
+        <h2><span class="step">1</span>ชนิดสินค้า</h2>
+        <select id="type"></select>
+      </section>
+
+      <section class="card">
+        <h2><span class="step">2</span>ตัวเลขวัด (นิ้ว · วางแบน)</h2>
+        <div class="fields" id="fieldsMain"></div>
+        <details id="detBox">
+          <summary>รายละเอียดเพิ่ม (คอ ไหล่ลาด จั๊ม ฮู้ด ฯลฯ)</summary>
+          <div class="fields" id="fieldsDetail"></div>
+        </details>
+        <p class="hint"><span class="badge s">ตัวอย่าง</span> = ค่าตั้งต้นที่ยังไม่ใช่ของจริง แก้เป็นตัวเลขจริงแล้วป้ายจะหายไป</p>
+        <p class="hint" id="srcNote"></p>
+      </section>
+
+      <section class="card">
+        <h2><span class="step">3</span>วิธีเย็บ · Construction</h2>
+        <div class="fields cons" id="consBox"></div>
+        <label class="f">หมายเหตุเพิ่มเติม (บรรทัดละ 1 ข้อ จะขึ้นท้ายตารางวิธีเย็บ)</label>
+        <textarea id="consNotes" rows="3" placeholder="เช่น ซิป YKK #5 สีดำ&#10;ริบ 1×1 คอตตอน 95%&#10;ป้ายคอพิมพ์ ไม่เย็บป้าย" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;resize:vertical"></textarea>
+        <label class="switch"><input type="checkbox" id="ctags"> แสดงหมายเลขจุดเย็บ ■ และตารางวิธีเย็บในภาพ</label>
+        <p class="hint"><span class="badge s">ยังไม่ยืนยัน</span> = ค่าตั้งต้น ในตารางวิธีเย็บจะขึ้น [TBC] จนกว่าจะเลือกเอง · ตะเข็บคู่/สามจะห่างกันตาม "ระยะห่างระหว่างแถว"</p>
+      </section>
+
+      <section class="card">
+        <h2><span class="step">4</span>ข้อมูลแบบ (กรอบท้ายภาพ)</h2>
+        <label class="f" style="margin-top:0">ชื่อแบบ / รหัสแบบ</label>
+        <input type="text" id="infName" placeholder="เช่น Stripes Zebra Zipped Hoodie">
+        <div class="two">
+          <div><label class="f">เวอร์ชัน</label><input type="text" id="infVer" placeholder="v1"></div>
+          <div><label class="f">ไซซ์ที่วัด</label><input type="text" id="infSize" placeholder="เช่น L"></div>
+        </div>
+        <p class="hint">แบรนด์ใหญ่ใส่เวอร์ชันทุกครั้ง กันโรงงานทำตามแบบเก่า ช่องที่ว่างจะขึ้นเป็น [TBC]</p>
+      </section>
+
+      <section class="card">
+        <h2><span class="step">5</span>มุมมองและการวัด</h2>
+        <label class="f" style="margin-top:0">มุมมอง</label>
+        <div class="seg" id="segViews"><button data-v="both">หน้า + หลัง</button><button data-v="front">หน้าอย่างเดียว</button></div>
+        <label class="f">เส้นวัด</label>
+        <div class="seg" id="segDims"><button data-v="pom">รหัสจุดวัด + ตาราง</button><button data-v="inline">ตัวเลขบนเส้น</button><button data-v="off">ปิด</button></div>
+        <div id="angBox">
+          <div class="rv"><span>มุมแขนเสื้อ (องศาจากแนวนอน)</span><b id="angV"></b></div>
+          <input type="range" id="ang" min="0" max="85" step="1">
+        </div>
+        <label class="switch"><input type="checkbox" id="ghost"> วาง flat บนหุ่นต้นแบบ (flat figure template)</label>
+        <label class="switch"><input type="checkbox" id="guides"> เส้นไกด์ Center Front / เอว / สะโพก (ไม่ติดไปในไฟล์)</label>
+      </section>
+
+      <section class="card">
+        <h2><span class="step">6</span>เทียบกับรูปถ่ายของจริง</h2>
+        <p class="hint" style="margin-top:0">ถ่ายตัวอย่างผ้าวางแบนจากด้านบนตรงๆ แล้วใส่รูปที่นี่ เส้นจะซ้อนบนรูปให้เห็นว่าตรงกันไหม (ระหว่างเทียบจะแสดงด้านหน้าอย่างเดียว)</p>
+        <div class="row" style="margin-top:10px">
+          <button id="phBtn">เลือกรูป</button>
+          <button id="calBtn" class="hide">เทียบสเกล (คลิก 2 จุด)</button>
+          <button id="phDel" class="hide small">เอารูปออก</button>
+        </div>
+        <input type="file" id="phFile" accept="image/*" hidden>
+        <div id="phCtl" class="hide">
+          <p class="hint" id="calHint"></p>
+          <div class="rv"><span>ความจางของรูป</span><b id="phOpV"></b></div>
+          <input type="range" id="phOp" min="10" max="100" step="5">
+          <div class="rv"><span>ขนาดรูป (กว้าง นิ้ว)</span><b id="phWV"></b></div>
+          <input type="range" id="phW" min="10" max="120" step="0.25">
+          <p class="hint">ลากรูปในพื้นที่ด้านขวาเพื่อขยับตำแหน่ง</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2><span class="step">7</span>ใส่ผ้าจริง (ภาพประกอบระดับ 2)</h2>
+        <p class="hint" style="margin-top:0">ใช้รูปถ่ายหรือภาพสแกน swatch ผ้าจริงแทนภาพ AI ลายผ้าจะออกมาขนาดเท่าของจริงบนทรง และภาพจะมีป้าย "ภาพประกอบจากผ้าจริง" ติดให้อัตโนมัติ ผ้าแยกตามชนิดสินค้า ตอนนี้กำลังใส่ให้ <b id="fbFor"></b></p>
+        <div class="row" style="margin-top:10px">
+          <button id="fbBtn">เลือกรูปผ้า</button>
+          <button id="fbDel" class="hide small">เอาผ้าออก</button>
+        </div>
+        <input type="file" id="fbFile" accept="image/*" hidden>
+        <details style="margin-top:10px"><summary>วิธีถ่ายรูปผ้าให้ได้ขนาดจริง</summary>
+          <p class="hint" style="margin-top:0">วางผ้าแบนบนพื้นเรียบ วางไม้บรรทัดข้างผ้า ถ่ายตรงจากด้านบนในแสงธรรมชาติ ไม่เปิดแฟลช แล้วครอปให้เหลือแต่เนื้อผ้า จากนั้นดูไม้บรรทัดว่ารูปที่ครอปกว้างกี่นิ้ว แล้วใส่ตัวเลขในช่อง "รูปผ้านี้กว้างจริงกี่นิ้ว"</p>
+        </details>
+        <div id="fbCtl" class="hide">
+          <div class="row" style="margin-top:10px;align-items:flex-start">
+            <img id="fbThumb" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--line)">
+            <div style="flex:1;min-width:0">
+              <label class="f" style="margin-top:0">ชื่อ / รหัสผ้า</label>
+              <input type="text" id="fbName" placeholder="เช่น Denim 13oz ริมแดง">
+            </div>
+          </div>
+          <label class="f">ผลฟอก / สี / ล็อต</label>
+          <input type="text" id="fbWash" placeholder="เช่น Wash test ระดับ 2">
+          <label class="f">รูปผ้านี้ (ทั้งรูป) กว้างจริงกี่นิ้ว</label>
+          <input type="number" id="fbW" step="0.25" min="0.25">
+          <label class="switch"><input type="checkbox" id="fbMeas"> วัดจากไม้บรรทัดแล้ว (ถ้ายังไม่ติ๊ก ป้ายจะขึ้นว่าขนาดลายเป็นค่าประมาณ)</label>
+          <label class="f">การต่อลาย</label>
+          <div class="seg" id="fbMode"><button data-v="tile">ต่อตรง (ผ้าลายตาราง/ลายทาง)</button><button data-v="mirror">ต่อแบบสะท้อน (ผ้าเรียบ/ยีนส์ฟอก รอยต่อเนียนกว่า)</button></div>
+          <label class="f">ลายซ้ำ (repeat) · แก้ลายขาดตรงรอยต่อ</label>
+          <p class="hint" id="fbRepTxt" style="margin-top:0"></p>
+          <div class="row" style="margin-top:6px"><button class="small" id="fbAuto">หาลายซ้ำอัตโนมัติ</button><button class="small" id="fbFull">ใช้รูปเต็ม</button></div>
+          <div class="rv"><span>ปรับความกว้างลายซ้ำ (% ของรูป)</span><b id="fbRwV"></b></div>
+          <input type="range" id="fbRw" min="5" max="100" step="0.1">
+          <div class="rv"><span>ปรับความสูงลายซ้ำ (% ของรูป)</span><b id="fbRhV"></b></div>
+          <input type="range" id="fbRh" min="5" max="100" step="0.1">
+          <p class="hint">รูปผ้าที่ครอปมามักไม่พอดีลาย 1 รอบ พอนำมาต่อกันลายจึงขาดเป็นแถบ เครื่องมือจะหาระยะที่ลายเริ่มซ้ำ แล้วตัดรูปให้พอดี ถ้ายังเห็นรอยขาด ให้เลื่อนปรับทีละนิดจนรอยหาย</p>
+          <label class="f">การแสดงผลบนผ้าลาย (แบบภาพนำเสนอของดีไซเนอร์)</label>
+          <div class="seg" id="fbLine"><button data-v="halo">เส้นดำ ขอบขาว (แนะนำ)</button><button data-v="white">เส้นขาว (ผ้าสีเข้ม)</button><button data-v="plain">เส้นปกติ</button></div>
+          <div class="rv"><span>ความเข้มลายผ้า (ลดลงให้เส้นอ่านง่าย)</span><b id="fbToneV"></b></div>
+          <input type="range" id="fbTone" min="40" max="100" step="1">
+          <label class="switch"><input type="checkbox" id="fbDepth"> เงามิติ: ข้างลำตัว ใต้แขน ใต้คอ/ฮู้ด ปากกระเป๋า</label>
+          <label class="f">ด้านในฮู้ด / ด้านในคอ</label>
+          <div class="seg" id="fbIn"><button data-v="same">ลายเดียวกัน + เงา (ผ้าทอลาย)</button><button data-v="base">สีพื้นหลังผ้า (ผ้าพิมพ์ลาย)</button><button data-v="contrast">ผ้าซับในคนละสี</button></div>
+          <label class="f">จั๊ม ปก และขอบริบ</label>
+          <div class="seg" id="fbTrim"><button data-v="solid">สีพื้น (ดึงสีจากผ้า)</button><button data-v="fabric">ลายเดียวกับตัว</button></div>
+          <div class="colors"><label>สีจั๊ม/ปก <input type="color" id="fbTrimC"></label><label id="fbInCBox">สีด้านใน <input type="color" id="fbInC"></label><button class="small" id="fbAutoC">ใช้สีจากผ้าอัตโนมัติ</button></div>
+          <label class="switch"><input type="checkbox" id="fbCenter"> จัดลายให้ตรงกึ่งกลางหน้า (CF) ซ้ายขวาเท่ากัน และตั้งแนวลายที่ระดับอก (กางเกง = ระดับสะโพก)</label>
+          <div id="fbSlvBox">
+            <label class="f">ลายบนแขนเสื้อ</label>
+            <div class="seg" id="fbSlv"><button data-v="grain">ตามแนวผ้าของแขน (แบบตัดจริง)</button><button data-v="body">ต่อตรงกับตัวเสื้อ</button></div>
+          </div>
+          <div class="rv"><span>หมุนลายผ้า</span><b id="fbRotV"></b></div>
+          <input type="range" id="fbRot" min="-90" max="90" step="1">
+          <div class="rv"><span>เลื่อนลายซ้าย-ขวา</span><b id="fbOxV"></b></div>
+          <input type="range" id="fbOx" step="0.05">
+          <div class="rv"><span>เลื่อนลายขึ้น-ลง</span><b id="fbOyV"></b></div>
+          <input type="range" id="fbOy" step="0.05">
+          <p class="hint">ใช้เลื่อนลาย เช่น ให้ลายตารางตรงกึ่งกลางหน้า (เปิด "เส้นไกด์ Center Front" ในข้อ 5 ช่วยดู) ผ้าที่ใส่จะจำไว้ในเบราว์เซอร์เครื่องนี้ ไม่ต้องใส่ใหม่ทุกครั้ง</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2><span class="step">8</span>คลังทรง NWL</h2>
+        <div class="row">
+          <input type="text" id="libName" placeholder="ตั้งชื่อทรง เช่น Boxy Tee 2027" style="flex:1">
+          <button id="libSave">บันทึกทรงนี้</button>
+        </div>
+        <div id="libList" style="margin-top:10px"></div>
+        <div class="row" style="margin-top:12px">
+          <button class="small" id="libExport">สำรองคลังเป็นไฟล์</button>
+          <button class="small" id="libImportBtn">นำเข้าไฟล์คลัง</button>
+          <input type="file" id="libImport" accept=".json,application/json" hidden>
+        </div>
+        <p class="hint">คลังเก็บไว้ในเบราว์เซอร์เครื่องนี้ ถ้าจะใช้เครื่องอื่นหรือส่งให้ทีม ให้กด "สำรองคลังเป็นไฟล์"</p>
+      </section>
+    </div>
+
+    <!-- ===== LOOK MODE ===== -->
+    <div id="lookPanel" class="hide">
+      <section class="card">
+        <h2><span class="step">1</span>ลุคในไลน์อัป</h2>
+        <div id="lookList"></div>
+        <div class="row" style="margin-top:10px"><button class="small" id="lookAdd">+ เพิ่มลุค</button></div>
+        <p class="hint">เลือกได้ทั้งทรงที่กำลังแก้ในแท็บ Flat และทรงที่บันทึกไว้ในคลัง "เป้าห้อย" = เป้ากางเกงต่ำกว่าเป้าจริงกี่นิ้ว (ทรงพอดี ~0.5–1, แบกกี้ 2–4)</p>
+      </section>
+      <section class="card">
+        <h2><span class="step">2</span>หุ่นตามสัดส่วน Fit model</h2>
+        <p class="hint" style="margin-top:0">ใส่สัดส่วนจริงของนายแบบ/นางแบบที่ใช้ลองชุดหรือถ่ายแบบ (ซม. วัดรอบตัว) หุ่นใช้สัดส่วนคนจริง 7.5 หัว ไม่ใช่หุ่นวาดแฟชั่นขายาว 9 หัว</p>
+        <div class="fields" id="bodyFields"></div>
+        <div class="rv"><span>มุมแขนเสื้อตอนใส่</span><b id="lkAngV"></b></div>
+        <input type="range" id="lkAng" min="30" max="85" step="1">
+      </section>
+      <section class="card">
+        <h2><span class="step">3</span>อ่านผล</h2>
+        <div id="lkSum"></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>เส้นและสี</h2>
+      <div class="rv" style="margin-top:0"><span>ความหนาเส้นรอบนอก</span><b id="lwV"></b></div>
+      <input type="range" id="lw" min="0.02" max="0.14" step="0.005">
+      <p class="hint">เส้นอื่นปรับตามลำดับชั้นอัตโนมัติ: รอบนอกหนาสุด → ตะเข็บเส้นทึบ → ตะเข็บเย็บโชว์เส้นประ → ลายจั๊มบางสุด</p>
+      <div class="colors">
+        <label>สีเส้น <input type="color" id="cLine"></label>
+        <label>สีเสื้อผ้า <input type="color" id="cFill"></label>
+      </div>
+      <label class="switch"><input type="checkbox" id="stitch"> ตะเข็บเย็บโชว์ (เส้นประ)</label>
+      <label class="switch"><input type="checkbox" id="shade"> สีอ่อนด้านในคอ/ฮู้ด</label>
+      <label class="switch"><input type="checkbox" id="grid"> ตารางทุก 1 นิ้ว (ไม่ติดไปในไฟล์)</label>
+      <label class="switch"><input type="checkbox" id="bar"> แถบสเกล 10 นิ้ว</label>
+      <label class="switch"><input type="checkbox" id="tblock"> กรอบข้อมูลท้ายภาพ (title block)</label>
+    </section>
+  </div>
+
+  <div class="preview">
+    <div class="pv-bar"><span id="pvInfo"></span><span id="pvWarn" style="color:var(--warn)"></span></div>
+    <div class="stage" id="stage"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- ข้อมูลชนิดสินค้า ----------
+   [key, ชื่อไทย, ชื่อจุดวัด, วิธีวัด, ค่าตั้งต้น, แหล่ง ('s' = ตัวอย่าง, 'r' = จากตารางจริง), รหัสจุดวัด POM] */
+const ZEBRA = 'ตัวเลขที่มีป้าย "จากตาราง" มาจาก Size chart Stripes Zebra Zipped Hoodie ไซซ์ L (13 พ.ย. 2026)';
+const TOP_HOOD_MAIN = [
+  ['C','อก','Chest','ใต้รักแร้ 1 นิ้ว ข้างหนึ่งถึงอีกข้าง',22,'r','A'],
+  ['L','ความยาว','Body length','จุดไหล่ข้างคอ (HPS) ลงถึงชาย',28,'r','B'],
+  ['S','ไหล่','Shoulder','ตะเข็บไหล่ซ้ายถึงขวา',23,'s','C'],
+  ['SL','แขน','Sleeve length','ตะเข็บไหล่ถึงปลายแขน',25,'r','D'],
+  ['SO','ปลายแขน','Sleeve opening','กว้างปลายจั๊มแขน วางแบน',4,'s','E'],
+  ['AH','วงแขน','Armhole (straight)','ตะเข็บไหล่ลงตรงถึงรักแร้',11,'s','F'],
+  ['H','ชายเสื้อ','Bottom opening','กว้างขอบจั๊มชาย วางแบน',19,'s','G'],
+];
+const TOP_HOOD_DET = [
+  ['NW','กว้างคอ','Neck width','ตะเข็บคอซ้ายถึงขวา',8,'s'],
+  ['ND','คอหน้าลึก','Front neck drop','ระดับ HPS ลงถึงคอหน้า',3,'s'],
+  ['SS','ไหล่ลาด','Shoulder slope','ปลายไหล่ต่ำกว่าข้างคอ',1.25,'s'],
+  ['SB','ความโค้งไหล่','Shoulder curve','ยิ่งมาก ไหล่ยิ่งตั้ง · 0 = เส้นตรงแบบเดิม',0.35,'s'],
+  ['RB','จั๊มชาย','Hem rib height','ความสูงขอบจั๊มชาย',2.5,'s'],
+  ['CF','จั๊มแขน','Cuff height','ความสูงจั๊มปลายแขน',2.5,'s'],
+  ['HH','ความสูงฮู้ด','Hood height','HPS ถึงยอดฮู้ด',14,'s'],
+  ['HW','ความกว้างฮู้ด','Hood width (front view)','กว้างฮู้ดเมื่อมองด้านหน้า',12.5,'s'],
+  ['PH','ความสูงกระเป๋า','Pocket height','จากตะเข็บจั๊มถึงปากกระเป๋า',7.5,'s'],
+];
+const T = {
+  tee:{cat:'top',name:'เสื้อยืดแขนสั้น',en:'Short Sleeve Tee',ang:20,fields:[
+    ['C','อก','Chest','ใต้รักแร้ 1 นิ้ว ข้างหนึ่งถึงอีกข้าง',22,'s','A'],
+    ['L','ความยาว','Body length','จุดไหล่ข้างคอ (HPS) ลงถึงชาย',28,'s','B'],
+    ['S','ไหล่','Shoulder','ตะเข็บไหล่ซ้ายถึงขวา',21,'s','C'],
+    ['SL','แขน','Sleeve length','ตะเข็บไหล่ถึงปลายแขน',9,'s','D'],
+    ['SO','ปลายแขน','Sleeve opening','กว้างปลายแขน วางแบน',8,'s','E'],
+    ['AH','วงแขน','Armhole (straight)','ตะเข็บไหล่ลงตรงถึงรักแร้',10,'s','F'],
+    ['H','ชายเสื้อ','Bottom opening','กว้างชายเสื้อ วางแบน',22,'s','G'],
+  ],detail:[
+    ['NW','กว้างคอ','Neck width','ขอบคอด้านใน ซ้ายถึงขวา',7.5,'s'],
+    ['ND','คอหน้าลึก','Front neck drop','ระดับ HPS ลงถึงขอบคอหน้า',3.5,'s'],
+    ['NR','ผ้าคอ / กุ๊นคอ','Neckband width','ความกว้างผ้าคอ หรือความกว้างกุ๊น',0.875,'s'],
+    ['MH','ความสูงคอเต่า','Mock neck height','ใช้เฉพาะแบบคอเต่า',1.25,'s'],
+    ['CW','ความกว้างปกโปโล','Polo collar width','ใช้เฉพาะคอโปโล วัดจากตะเข็บคอถึงขอบปก',2.75,'s'],
+    ['PL','ความยาวสาบ','Placket length','ใช้เฉพาะคอโปโล',6,'s'],
+    ['PW','ความกว้างสาบ','Placket width','ใช้เฉพาะคอโปโล',1.25,'s'],
+    ['SS','ไหล่ลาด','Shoulder slope','ปลายไหล่ต่ำกว่าข้างคอ',1,'s'],
+    ['SB','ความโค้งไหล่','Shoulder curve','ยิ่งมาก ไหล่ยิ่งตั้ง · 0 = เส้นตรงแบบเดิม',0.45,'s'],
+    ['CF','จั๊มปลายแขน','Sleeve cuff height','ใช้เมื่อปลายแขนเป็นจั๊มริบ',1,'s'],
+    ['HS','ระยะชายพิเศษ','Hem detail depth','ผ่าข้าง = ความยาวผ่า · ชายโค้ง = ข้างสูงกว่ากลาง · หลังยาว = หลังยาวกว่าหน้า',2,'s'],
+  ]},
+  hoodie:{cat:'top',name:'ฮู้ดดี้ (สวมหัว)',en:'Pullover Hoodie',ang:55,fields:TOP_HOOD_MAIN,detail:TOP_HOOD_DET,note:ZEBRA},
+  zip:{cat:'top',name:'ฮู้ดดี้ซิปหน้า',en:'Zip Hoodie',ang:55,fields:TOP_HOOD_MAIN,detail:TOP_HOOD_DET,note:ZEBRA},
+  jeans:{cat:'bottom',name:'กางเกงยีนส์',en:'5-Pocket Jeans',fields:[
+    ['W','เอว','Waist','ขอบเอวบน ซ้ายถึงขวา วางแบน',16,'s','A'],
+    ['Hp','สะโพก','Hip','จุดกว้างสุดเหนือเป้า',21,'s','B'],
+    ['R','เป้าหน้า','Front rise','ขอบเอวบนลงถึงตะเข็บเป้า',11.5,'s','C'],
+    ['T','ต้นขา','Thigh','ใต้เป้า 1 นิ้ว ขาเดียว',12.5,'s','D'],
+    ['K','เข่า','Knee','ขาเดียว ตรงระดับเข่า',9.5,'s','E'],
+    ['O','ปลายขา','Leg opening','ขาเดียว วางแบน',8.5,'s','F'],
+    ['I','ขาด้านใน','Inseam','ตะเข็บเป้าถึงปลายขา',31,'s','G'],
+  ],detail:[
+    ['WB','ขอบเอว','Waistband height','ความสูงขอบเอว',1.5,'s'],
+    ['KN','ระยะเข่า','Knee from crotch','จากเป้าลงถึงระดับเข่า',13,'s'],
+  ]},
+  sweat:{cat:'bottom',name:'กางเกงวอร์ม / จ๊อกเกอร์',en:'Sweatpants',fields:[
+    ['W','เอว','Waist (relaxed)','ขอบเอวยางยืดตอนไม่ยืด',14,'s','A'],
+    ['Hp','สะโพก','Hip','จุดกว้างสุดเหนือเป้า',22,'s','B'],
+    ['R','เป้าหน้า','Front rise','ขอบเอวบนลงถึงตะเข็บเป้า',12,'s','C'],
+    ['T','ต้นขา','Thigh','ใต้เป้า 1 นิ้ว ขาเดียว',13,'s','D'],
+    ['K','เข่า','Knee','ขาเดียว ตรงระดับเข่า',10,'s','E'],
+    ['O','ปลายขา','Leg opening','ขาเดียว วางแบน',5,'s','F'],
+    ['I','ขาด้านใน','Inseam','ตะเข็บเป้าถึงปลายขา',29,'s','G'],
+  ],detail:[
+    ['WB','ขอบเอว','Waistband height','ความสูงขอบเอวยางยืด',1.75,'s'],
+    ['KN','ระยะเข่า','Knee from crotch','จากเป้าลงถึงระดับเข่า',13,'s'],
+    ['CF','จั๊มปลายขา','Cuff height','0 = ขาตรงไม่มีจั๊ม',3,'s'],
+  ]},
+};
+const allFields = t => T[t].fields.concat(T[t].detail);
+/* สัดส่วน fit model (ซม.) */
+const BODY = [
+  ['height','ส่วนสูง','Height',175],
+  ['shoulder','ไหล่','Shoulder width (ปลายไหล่ถึงปลายไหล่)',45],
+  ['chest','รอบอก','Chest girth',94],
+  ['waist','รอบเอว','Waist girth',78],
+  ['hip','รอบสะโพก','Hip girth',95],
+  ['inseam','ขาด้านใน','Inseam (เป้าถึงพื้น)',80],
+];
+
+/* ---------- วิธีเย็บ (Construction) ---------- */
+const ST_OPTS=[['n','ไม่มีเย็บโชว์'],['1','ตะเข็บเดี่ยว (1 เข็ม)'],['2','ตะเข็บคู่ (2 เข็ม)'],['3','ตะเข็บสาม (คัฟเวอร์ 3 เข็ม)']];
+const GAP={k:'gap',label:'ระยะห่างระหว่างแถวตะเข็บ',en:'Needle gauge',type:'sel',opts:[['0.125','1/8″'],['0.1875','3/16″'],['0.25','1/4″']],def:'0.25'};
+const stz=(k,label,en,def,when)=>({k,label,en,type:'st',def,tag:true,when});
+const isPolo=K=>K.neck==='polo';
+const HOOD_CONS=[
+  {k:'hood',label:'ฮู้ด',en:'Hood construction',type:'sel',opts:[['2','ฮู้ด 2 ชิ้น (ตะเข็บกลาง)'],['3','ฮู้ด 3 ชิ้น (มีแถบกลาง)']],def:'2',tag:true},
+  {k:'cord',label:'เชือกฮู้ด',en:'Drawcord',type:'chk',def:true},
+  {k:'finish',label:'ชายและปลายแขน',en:'Hem & cuff finish',type:'sel',opts:[['rib','จั๊มริบ (rib)'],['self','พับเย็บ ไม่มีจั๊ม (self hem)']],def:'rib',tag:true},
+  {k:'pkt',label:'กระเป๋า',en:'Pocket style',type:'sel',opts:[['kanga','กระเป๋าจิงโจ้ (kangaroo)'],['side','กระเป๋าเฉียงข้าง (side slant)'],['none','ไม่มีกระเป๋า']],def:'kanga',tag:true},
+  stz('s_hood','ตะเข็บขอบฮู้ด','Hood edge topstitch','1'),
+  stz('s_pkt','ตะเข็บกระเป๋า','Pocket topstitch','1',K=>K.pkt!=='none'),
+  stz('s_arm','ตะเข็บวงแขน','Armhole topstitch','n'),
+  stz('s_hem','ตะเข็บชาย/ปลายแขน','Hem & cuff topstitch','n'),
+];
+const CONS={
+  tee:[
+    {k:'neck',label:'แบบคอ',en:'Neckline',type:'sel',opts:[['crew','คอกลม ผ้าริบ (rib neckband)'],['self','คอกลม ผ้าเดียวกับตัว (self fabric)'],['bind','คอกุ๊น (binding)'],['vneck','คอวี ผ้าริบ (V-neck)'],['mock','คอเต่าต่ำ (mock neck)'],['polo','คอโปโล ปกถัก+สาบ (polo)']],def:'crew',tag:true},
+    {k:'btn',label:'จำนวนกระดุมสาบ',en:'Placket buttons',type:'sel',opts:[['2','2 เม็ด'],['3','3 เม็ด'],['4','4 เม็ด']],def:'3',when:isPolo},
+    stz('s_plk','ตะเข็บสาบ','Placket topstitch','1',isPolo),
+    {k:'ribTex',label:'แสดงลายริบที่คอ',en:'Rib texture',type:'chk',def:true,when:K=>!isPolo(K)},
+    {k:'tape',label:'เทปคอหลัง',en:'Back neck tape',type:'chk',def:false},
+    stz('s_neck','ตะเข็บคอ','Neck topstitch','1',K=>!isPolo(K)),
+    stz('s_arm','ตะเข็บวงแขน','Armhole topstitch','n'),
+    {k:'slvFin',label:'ปลายแขน',en:'Sleeve finish',type:'sel',opts:[['hem','พับเย็บ (self hem)'],['rib','จั๊มริบ (rib cuff)'],['raw','ขาดดิบ ไม่เย็บ (raw edge)']],def:'hem',tag:true},
+    stz('s_slv','ตะเข็บปลายแขน','Sleeve hem','2',K=>K.slvFin!=='raw'),
+    {k:'hemShape',label:'ทรงชายเสื้อ',en:'Hem shape',type:'sel',opts:[['straight','ชายตรง'],['slit','ผ่าข้าง (side slit)'],['curve','ชายโค้ง (shirttail)'],['drop','หน้าสั้นหลังยาว (drop tail)']],def:'straight',tag:true},
+    {k:'hemFin',label:'ขอบชายเสื้อ',en:'Hem finish',type:'sel',opts:[['hem','พับเย็บ (self hem)'],['raw','ขาดดิบ ไม่เย็บ (raw edge)']],def:'hem'},
+    stz('s_hem','ตะเข็บชายเสื้อ','Bottom hem','2',K=>K.hemFin!=='raw'),
+    GAP],
+  hoodie:HOOD_CONS.concat([GAP]),
+  zip:HOOD_CONS.concat([stz('s_zip','ตะเข็บข้างซิป','Zipper topstitch','1'),GAP]),
+  jeans:[{k:'coin',label:'กระเป๋าเหรียญ',en:'Coin pocket',type:'chk',def:true,tag:true},{k:'rivet',label:'หมุดย้ำ',en:'Rivets',type:'chk',def:true,tag:true},stz('s_wb','ตะเข็บขอบเอว','Waistband','1'),stz('s_fly','ตะเข็บซิปหน้า (J-stitch)','Fly','2'),stz('s_pkt','ตะเข็บปากกระเป๋าหน้า','Front pocket','1'),
+    stz('s_yoke','ตะเข็บแอกหลัง','Back yoke','2'),stz('s_bpkt','ตะเข็บกระเป๋าหลัง','Back pocket','2'),stz('s_hem','ตะเข็บปลายขา','Leg hem','1'),GAP],
+  sweat:[{k:'cord',label:'เชือกเอว',en:'Drawcord',type:'chk',def:true},stz('s_wb','ตะเข็บขอบเอว (ช่องยางยืด)','Waistband channel','n'),
+    stz('s_pkt','ตะเข็บปากกระเป๋า','Pocket','1'),stz('s_hem','ตะเข็บปลายขา/จั๊ม','Leg hem / cuff','1'),GAP],
+};
+function consDefaults(t){ const o={}; for(const c of CONS[t]) o[c.k]=c.def; return o; }
+function consOf(t){ return state.cons[t]; }
+function consVisible(t,K){ K=K||state.cons[t]; return CONS[t].filter(c=>!c.when||c.when(K)); }
+function tagNums(t,K){ const m={}; let i=1; for(const c of consVisible(t,K)) if(c.tag) m[c.k]=i++; return m; }
+function frac(v){ const s=Math.round(v*16), w=Math.floor(s/16), r=s%16; if(!r) return String(w); let n=r,dn=16; while(n%2===0){n/=2;dn/=2;} return (w?w+' ':'')+n+'/'+dn; }
+function consText(t,K,c,p){
+  if(c.type==='chk') return K[c.k]?'มี':'ไม่มี';
+  if(c.type==='st'){ const n=nRows(K[c.k]); const nm=ST_OPTS.find(o=>o[0]===String(K[c.k]))[1]; return n>1?`${nm} · ห่าง ${frac(+K.gap)}″`:nm; }
+  const op=c.opts.find(o=>o[0]===String(K[c.k])); let s=op?op[1]:String(K[c.k]);
+  if(c.k==='neck'&&p) s+=K.neck==='mock'?` · สูง ${frac(p.MH||1.25)}″`:K.neck==='polo'?` · ปกกว้าง ${frac(p.CW)}″ · สาบ ${frac(p.PL)}×${frac(p.PW)}″`:` · กว้าง ${frac(p.NR)}″`;
+  if(c.k==='slvFin'&&p&&K.slvFin==='rib') s+=` · สูง ${frac(p.CF)}″`;
+  if(c.k==='hemShape'&&p&&K.hemShape!=='straight') s+=` · ${frac(p.HS)}″`;
+  return s;
+}
+
+/* ---------- state ---------- */
+const LS='nwl-flat-state-v1', LSLIB='nwl-flat-lib-v1';
+function defaults(){
+  const params={}, edited={}, info={}, cons={}, consSet={};
+  for(const t in T){ params[t]={ANG:T[t].ang||0}; edited[t]={}; cons[t]=consDefaults(t); consSet[t]={}; info[t]={name:'',ver:'v1',size:t==='hoodie'||t==='zip'?'L':''}; for(const f of allFields(t)) params[t][f[0]]=f[4]; }
+  const body={edited:{}}; for(const b of BODY) body[b[0]]=b[3];
+  return {mode:'flat',type:'zip',params,edited,info,body,cons,consSet,notes:{},
+    style:{line:'#111111',fill:'#ffffff',lw:0.05,dims:'pom',views:'both',stitch:true,shade:true,grid:true,bar:true,tblock:true,ghost:false,guides:false,ctags:true},
+    looks:[{top:'cur:zip',bottom:'cur:jeans',drop:1},{top:'cur:tee',bottom:'cur:sweat',drop:1.5}], lookAngle:70};
+}
+function load(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(LS,JSON.stringify(state)); }catch(e){} }
+function saveLib(){ try{ localStorage.setItem(LSLIB,JSON.stringify(lib)); }catch(e){} }
+let state=defaults();
+(function merge(){ const s=load(LS); if(!s) return;
+  for(const k of ['mode','type','lookAngle']) if(s[k]!=null) state[k]=s[k];
+  for(const t in T){ if(s.params&&s.params[t]) Object.assign(state.params[t],s.params[t]); if(s.edited&&s.edited[t]) state.edited[t]=s.edited[t]; if(s.info&&s.info[t]) Object.assign(state.info[t],s.info[t]);
+    if(s.cons&&s.cons[t]) Object.assign(state.cons[t],s.cons[t]); if(s.consSet&&s.consSet[t]) state.consSet[t]=s.consSet[t]; }
+  if(s.style){ Object.assign(state.style,s.style); if(s.style.dims===true) state.style.dims='pom'; if(s.style.dims===false) state.style.dims='off'; }
+  if(s.body) Object.assign(state.body,s.body); if(s.notes) state.notes=s.notes;
+  if(Array.isArray(s.looks)&&s.looks.length) state.looks=s.looks;
+  if(!T[state.type]) state.type='zip'; if(state.mode!=='look') state.mode='flat';
+})();
+let lib=load(LSLIB)||[];
+const LSFAB='nwl-flat-fabric-v1';
+let fabrics=load(LSFAB)||{}; // {ชนิดสินค้า: {src,ratio,w,measured,rot,ox,oy,mirror,name,wash}}
+function saveFab(){ try{ localStorage.setItem(LSFAB,JSON.stringify(fabrics)); return true; }catch(e){ return (e&&(e.name==='QuotaExceededError'||e.code===22))?'quota':'blocked'; } }
+let photo=null; // {src, ratio, w, x, y, op}  (ไม่บันทึก รูปต้องใส่ใหม่ทุกครั้ง)
+let calib=null;
+
+/* ---------- เรขาคณิต ---------- */
+const fx=n=>(Math.round(n*1000)/1000).toString();
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1]], sub=(a,b)=>[a[0]-b[0],a[1]-b[1]], mul=(a,k)=>[a[0]*k,a[1]*k];
+const lerp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t], len=a=>Math.hypot(a[0],a[1]), norm=a=>mul(a,1/(len(a)||1));
+const mx=p=>[-p[0],p[1]], pt=p=>fx(p[0])+' '+fx(p[1]);
+const rot=(p,c,deg)=>{const r=deg*Math.PI/180,x=p[0]-c[0],y=p[1]-c[1];return[c[0]+x*Math.cos(r)-y*Math.sin(r),c[1]+x*Math.sin(r)+y*Math.cos(r)];};
+function crSeg(pts,closed){ // Catmull-Rom → Bézier
+  let d=''; const n=pts.length;
+  for(let i=0;i<(closed?n:n-1);i++){
+    const p0=closed?pts[(i-1+n)%n]:pts[Math.max(i-1,0)], p1=pts[i], p2=pts[(i+1)%n], p3=closed?pts[(i+2)%n]:pts[Math.min(i+2,n-1)];
+    const c1=[p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6], c2=[p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6];
+    d+=` C${pt(c1)} ${pt(c2)} ${pt(p2)}`;
+  } return d;
+}
+const fmt=v=>{let r=Math.round(v*1000)/1000; if(Math.abs(r*8-Math.round(r*8))>1e-6) r=Math.round(v*10)/10; return (r%1===0?r.toFixed(0):String(r));};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function shadeOf(hex,lineHex){
+  const h=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16)); const a=h(hex), b=h(lineHex);
+  return '#'+a.map((v,i)=>Math.round(v+(b[i]-v)*0.08).toString(16).padStart(2,'0')).join('');
+}
+
+/* ลำดับชั้นเส้น: รอบนอก 1 · ตะเข็บทึบ 0.55 · เย็บโชว์ประ 0.45 · จั๊ม/รายละเอียด 0.3 */
+/* fab = ผ้าจริง {src,ratio,w,...} · fid = id ของ pattern (ตัวผ้าเป็นลายผ้าจริง ส่วนกระดุม/ตาไก่ยังใช้สีเรียบ) */
+function mixHex(a,b,t){ const h=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16)); const A=h(a), B=h(b);
+  return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join(''); }
+let UID=0; const uid=()=>'u'+(++UID).toString(36);
+/* ผ้าจริงแบบภาพนำเสนอ (presentation flat):
+   - เส้นบนผ้า: halo = เส้นดำมีขอบขาวรอง (อ่านออกบนลายแน่น), white = เส้นขาวขอบดำ (ผ้าสีเข้ม), plain = เส้นปกติ
+   - ด้านในฮู้ด/คอ: same = ลายเดียวกัน + เงา (ผ้าทอลาย), base = สีพื้นด้านหลังผ้า (ผ้าพิมพ์ลาย), contrast = ผ้าซับในคนละสี
+   - จั๊ม/ปก: solid = สีพื้นดึงจากผ้า, fabric = ลายเดียวกับตัว
+   - depth = เงามิติแบบชั้น multiply ข้างลำตัว ใต้แขน ใต้คอ */
+function styler(fab,fid){
+  const s=state.style, lw=+s.lw, grain=fab&&fab.slv!=='body';
+  const lm=fab?(fab.lineMode||'halo'):'plain', line=lm==='white'?'#ffffff':s.line, halo=lm==='halo'?'#ffffff':lm==='white'?'#111111':null;
+  const auto=fab&&fab.autoColor||'#555555';
+  const trim=fab&&(fab.trim||'solid')==='solid'?(fab.trimColor||auto):null;
+  let shade;
+  if(!fab) shade=s.shade?shadeOf(s.fill,s.line):s.fill;
+  else { const ins=fab.inside||'same';
+    shade= ins==='same'?`url(#${fid}S)` : mixHex(fab.inColor||(ins==='base'?mixHex(auto,'#ffffff',0.6):'#2b2b2b'),'#000000',0.22); }
+  return {
+    fill:s.fill, line, lw, body:fab?`url(#${fid})`:s.fill, trim, depth:!!fab&&fab.depth!==false,
+    slvR:grain?`url(#${fid}R)`:null, slvL:grain?`url(#${fid}L)`:null,
+    shade, fillOp: photo&&state.mode==='flat'?0.12:1,
+    shape(d,fill){ const f=fill||this.body;
+      if(!halo) return `<path d="${d}" fill="${f}" fill-opacity="${this.fillOp}" stroke="${line}" stroke-width="${fx(lw)}" stroke-linejoin="round"/>`;
+      return `<path d="${d}" fill="${f}" fill-opacity="${this.fillOp}" stroke="${halo}" stroke-opacity=".9" stroke-width="${fx(lw*2.8)}" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${line}" stroke-width="${fx(lw)}" stroke-linejoin="round"/>`; },
+    ln(d,w=0.55){ const u=halo?`<path d="${d}" fill="none" stroke="${halo}" stroke-opacity=".85" stroke-width="${fx(lw*w+lw*1.6)}" stroke-linecap="round" stroke-linejoin="round"/>`:'';
+      return u+`<path d="${d}" fill="none" stroke="${line}" stroke-width="${fx(lw*w)}" stroke-linecap="round" stroke-linejoin="round"/>`;},
+    rib(d){ return halo?`<path d="${d}" fill="none" stroke="${line==='#ffffff'?'#ffffff':'#000000'}" stroke-opacity=".55" stroke-width="${fx(lw*0.35)}" stroke-linecap="round"/>`:this.ln(d,0.3); }, // ลายริบไม่ต้องมีขอบขาว ไม่งั้นดูเป็นลายทางขาว
+    st(d){ if(!s.stitch) return ''; const da=`stroke-dasharray="${fx(lw*3)} ${fx(lw*2.4)}"`;
+      const u=halo?`<path d="${d}" fill="none" stroke="${halo}" stroke-opacity=".85" stroke-width="${fx(lw*1.6)}" ${da} stroke-linecap="round"/>`:'';
+      return u+`<path d="${d}" fill="none" stroke="${line}" stroke-width="${fx(lw*0.45)}" ${da} stroke-linecap="round"/>`;},
+    trimFill(d){ return trim?`<path d="${d}" fill="${trim}" stroke="none"/>`:''; },
+    // เงาแบบไล่ระดับ ตัดตามรูปทรง (clip)
+    clipShade(path,body){ if(!this.depth) return ''; const c=uid(); return `<defs><clipPath id="${c}"><path d="${path}"/></clipPath></defs><g clip-path="url(#${c})" style="pointer-events:none">${body}</g>`; },
+    lin(x1,y1,x2,y2,stops){ const g=uid(); return {id:g,def:`<linearGradient id="${g}" gradientUnits="userSpaceOnUse" x1="${fx(x1)}" y1="${fx(y1)}" x2="${fx(x2)}" y2="${fx(y2)}">${stops.map(s=>`<stop offset="${s[0]}" stop-color="${s[2]||'#000'}" stop-opacity="${s[1]}"/>`).join('')}</linearGradient>`}; },
+    rad(cx,cy,r,op,sy=1){ const g=uid(); return {id:g,def:`<radialGradient id="${g}" gradientUnits="userSpaceOnUse" cx="${fx(cx)}" cy="${fx(cy)}" r="${fx(r)}" gradientTransform="translate(0 ${fx(cy)}) scale(1 ${sy}) translate(0 ${fx(-cy)})"><stop offset="0" stop-color="#000" stop-opacity="${op}"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>`}; },
+  };
+}
+const BIG='x="-300" y="-300" width="600" height="600"';
+function depthTop(S,dT,o){ // เงาลำตัวเสื้อ: ข้างลำตัว ใต้คอ/ฮู้ด ใต้แขน ชายเสื้อ
+  if(!S.depth) return '';
+  const {C,L,ND,NW,AH,H}=o, side=S.lin(-C/2,0,C/2,0,[[0,.22],[.18,0],[.82,0],[1,.22]]), hem=S.lin(0,L-3.5,0,L,[[0,0],[1,.14]]);
+  const neck=S.rad(0,(o.hood?ND+0.6:ND*0.6),NW*(o.hood?0.95:0.75),o.hood?.32:.22,0.55), aR=S.rad(C/2,AH+0.6,2.6,.2), aL=S.rad(-C/2,AH+0.6,2.6,.2);
+  const g=[side,hem,neck,aR,aL];
+  return S.clipShade(dT,`<defs>${g.map(x=>x.def).join('')}</defs>`+g.map(x=>`<rect ${BIG} fill="url(#${x.id})"/>`).join(''));
+}
+function depthSleeve(S,path,top,under){
+  if(!S.depth) return '';
+  const g=S.lin(under[0],under[1],top[0],top[1],[[0,.28],[.55,0],[1,.06,'#fff']]);
+  return S.clipShade(path,`<defs>${g.def}</defs><rect ${BIG} fill="url(#${g.id})"/>`);
+}
+const DIM='#d9480f';
+/* เส้นวัด: mode 'inline' = ตัวเลขบนเส้น, 'pom' = รหัสในวงกลม */
+function dimLine(p1,p2,label,off=[0,0],mode='inline',lw=0.03){
+  const a=add(p1,off), b=add(p2,off), dv=norm(sub(b,a)), nv=[-dv[1],dv[0]], tk=0.3;
+  let s=`<path d="M${pt(a)} L${pt(b)} M${pt(add(a,mul(nv,tk)))} L${pt(sub(a,mul(nv,tk)))} M${pt(add(b,mul(nv,tk)))} L${pt(sub(b,mul(nv,tk)))}" stroke="${DIM}" stroke-width="${fx(lw)}" fill="none"/>`;
+  if(len(off)>0.01) s+=`<path d="M${pt(p1)} L${pt(a)} M${pt(p2)} L${pt(b)}" stroke="${DIM}" stroke-width="${fx(lw*0.6)}" stroke-dasharray="0.12 0.1" fill="none" opacity=".7"/>`;
+  const m=lerp(a,b,0.5);
+  if(mode==='pom'){
+    s+=`<circle cx="${fx(m[0])}" cy="${fx(m[1])}" r="0.42" fill="#fff" stroke="${DIM}" stroke-width="0.045"/><text x="${fx(m[0])}" y="${fx(m[1]+0.17)}" text-anchor="middle" font-size="0.48" font-weight="700" fill="${DIM}">${label}</text>`;
+  } else {
+    let ang=Math.atan2(dv[1],dv[0])*180/Math.PI; if(ang>89.5)ang-=180; if(ang<-90.5)ang+=180;
+    s+=`<text x="${fx(m[0])}" y="${fx(m[1])}" transform="rotate(${fx(ang)} ${fx(m[0])} ${fx(m[1])})" dy="-0.22" text-anchor="middle" font-size="0.6" font-weight="700" fill="${DIM}" stroke="#fff" stroke-width="0.14" paint-order="stroke">${label}</text>`;
+  }
+  return s;
+}
+function mkDim(type,o){ // คืนฟังก์ชันวาดเส้นวัดตามโหมด
+  const fl={}; for(const f of T[type].fields) fl[f[0]]=f;
+  return (key,p1,p2,v,off)=>{ const f=fl[key]; if(!f||o.dims==='off') return '';
+    return dimLine(p1,p2,o.dims==='pom'?f[6]:`${f[1]} ${fmt(v)}″`,off,o.dims); };
+}
+
+/* ---------- วิธีเย็บ: ตัวช่วยวาด ---------- */
+const nRows=v=>(!v||v==='n')?0:+v;
+// โค้งคอแบบ Bézier 2 ช่วง (ซ้าย → กลาง → ขวา)
+function bz(style,w,y0,dep){
+  const dy=dep-y0;
+  const L=style==='vneck'
+    ? [[-w,y0],[-w*0.7,y0+dy*0.35],[-w*0.3,y0+dy*0.75],[0,dep]]
+    : [[-w,y0],[-w*0.95,y0+dy*0.7],[-w*0.55,dep],[0,dep]];
+  const R=L.slice().reverse().map(mx);
+  return [L,R];
+}
+const bzSeg=segs=>segs.map(s=>` C${pt(s[1])} ${pt(s[2])} ${pt(s[3])}`).join('');
+const bzPath=segs=>`M${pt(segs[0][0])}`+bzSeg(segs);
+const bzRev=segs=>segs.slice().reverse().map(s=>s.slice().reverse());
+function bzSample(segs,n){ const out=[];
+  for(let i=0;i<=n;i++){ let t=i/n*2, k=Math.min(1,Math.floor(t)); t-=k; const [a,b,c,d]=segs[k], u=1-t;
+    out.push([u*u*u*a[0]+3*u*u*t*b[0]+3*u*t*t*c[0]+t*t*t*d[0], u*u*u*a[1]+3*u*u*t*b[1]+3*u*t*t*c[1]+t*t*t*d[1]]); }
+  return out; }
+function cubicPts(c,n){ const out=[]; for(let i=0;i<=n;i++){ const t=i/n,u=1-t; out.push([0,1].map(j=>u*u*u*c[0][j]+3*u*u*t*c[1][j]+3*u*t*t*c[2][j]+t*t*t*c[3][j])); } return out; }
+function fray(pts,dir,S){ // ขอบขาดดิบ: ขีดสั้นๆ ตามขอบ
+  let r=''; for(let i=0;i<pts.length-1;i++){ const a=pts[i], b=pts[i+1], L=len(sub(b,a)), m=Math.max(1,Math.round(L/0.2));
+    for(let k=0;k<m;k++){ const q=lerp(a,b,(k+0.5)/m), l=(k%3===0)?0.22:0.12; r+=`M${pt(sub(q,mul(dir,0.05)))} L${pt(add(q,mul(dir,l)))} `; } }
+  return S.rib(r); }
+function ribBetween(S,a,b,n){ const A=bzSample(a,n), B=bzSample(b,n); let r=''; for(let i=1;i<n;i++) r+=`M${pt(A[i])} L${pt(B[i])} `; return S.rib(r); }
+
+/* ---------- เสื้อ ---------- */
+function buildTop(type,p,o,S){
+  const K=o.cons||consOf(type), gap=+K.gap||0.25;
+  const hood=type!=='tee', zip=type==='zip', back=!!o.back, selfFin=hood&&K.finish==='self';
+  const {C,L,SL,SO,AH,H,NW,ND,SS}=p, Sh=p.S, RB=hood&&!selfFin?p.RB:0, BND=0.75;
+  const CF=hood?(!selfFin?p.CF:0):(K.slvFin==='rib'?(p.CF||1):0);
+  const hs=hood?'straight':(K.hemShape||'straight'), HS=p.HS||2, rawHem=!hood&&K.hemFin==='raw';
+  const th=p.ANG*Math.PI/180, d=[Math.cos(th),Math.sin(th)], n=[-Math.sin(th),Math.cos(th)];
+  const sh=[Sh/2,SS], U=[C/2,AH];
+  const c1=[sh[0]+0.15,sh[1]+(U[1]-sh[1])*0.45], c2=[U[0]-0.25,U[1]-(U[1]-sh[1])*0.25];
+  let A=add(sh,mul(d,SL)), B=add(A,mul(n,SO)), Us=U, rc1=c1, rc2=c2;
+  const rd=o.look?(o.lookAngle-p.ANG):0;
+  if(rd){A=rot(A,sh,rd);B=rot(B,sh,rd);Us=rot(U,sh,rd);rc1=rot(c1,sh,rd);rc2=rot(c2,sh,rd);}
+  const dS=norm(sub(A,sh)), dU=norm(sub(Us,B));
+  const w0=NW/2, nR=[w0,0], nL=[-w0,0], anchors={};
+  // เส้นไหล่: โค้งนูนขึ้นเล็กน้อยแบบไหล่คนจริง (SB = ความโค้งไหล่) ไม่ใช่เส้นตรงจากคอถึงปลายไหล่
+  // SB = 0 คือเส้นตรงเดิม · ยิ่งมาก ไหล่ช่วงใกล้คอยิ่งแบนระดับ แล้วโค้งลงที่ปลายไหล่ (จุดข้างคอ HPS ยังสูงสุดเสมอ)
+  const SB=p.SB==null?0.45:+p.SB, run=Math.max(0.5,Sh/2-w0);
+  const shP1=[w0+run*0.4,Math.max(0,SS*0.4-SB)], shP2=[w0+run*0.8,Math.max(0,SS*0.8-SB*1.1)];
+  const shoulderSeg=` C${pt(shP1)} ${pt(shP2)}`;
+  const bez=(t,a,b,c,d)=>{ const u=1-t; return u*u*u*a+3*u*u*t*b+3*u*t*t*c+t*t*t*d; };
+  const sl=w=>{ if(w<=w0) return 0; if(w>=w0+run) return SS; let lo=0,hi=1;
+    for(let i=0;i<24;i++){ const m=(lo+hi)/2; if(bez(m,w0,shP1[0],shP2[0],w0+run)<w) lo=m; else hi=m; }
+    return bez((lo+hi)/2,0,shP1[1],shP2[1],SS); };
+  const ns=hood?'hood':(K.neck||'crew'), bw=p.NR||0.875, MH=p.MH||1.25, dM=ND*0.55;
+  const isV=ns==='vneck', vk=isV?1.6:1;
+
+  // ขอบคอของตัวเสื้อ
+  const topEdge = back ? bz('crew',w0,0,ns==='mock'?BND*0.6:BND)
+                       : (ns==='mock'? bz('crew',w0,0,dM) : bz(isV?'vneck':'crew',w0,0,ND));
+  let dT=`M${pt(nR)}${shoulderSeg} ${pt(sh)} C${pt(c1)} ${pt(c2)} ${pt(U)}`;
+  const curveR=[[H/2,L-HS],[H/2-1.2,L-HS+0.1],[H*0.28,L],[0,L]];
+  if(RB>0) dT+=` L${pt([C/2,L-RB])} L${pt([H/2,L])} L${pt([-H/2,L])} L${pt([-C/2,L-RB])}`;
+  else if(hs==='slit') dT+=` L${pt([H/2,L-HS])} L${pt([H/2-0.12,L])} L${pt([-H/2+0.12,L])} L${pt([-H/2,L-HS])}`;
+  else if(hs==='curve') dT+=` L${pt(curveR[0])} C${pt(curveR[1])} ${pt(curveR[2])} ${pt(curveR[3])} C${pt(mx(curveR[2]))} ${pt(mx(curveR[1]))} ${pt(mx(curveR[0]))}`;
+  else if(hs==='drop'&&back) dT+=` L${pt([H/2,L])} L${pt([H/2-0.12,L+HS])} L${pt([-H/2+0.12,L+HS])} L${pt([-H/2,L])}`;
+  else dT+=` L${pt([H/2,L])} L${pt([-H/2,L])}`;
+  dT+=` L${pt(mx(U))} C${pt(mx(c2))} ${pt(mx(c1))} ${pt(mx(sh))} C${pt(mx(shP2))} ${pt(mx(shP1))} ${pt(nL)}`+bzSeg(topEdge)+'Z';
+
+  let behind='', torso=S.shape(dT)+depthTop(S,dT,{C,L,ND:back?BND:ND,NW,AH,H,hood}), det='', front='';
+  const rows=(n,fn,base,step)=>{ let s=''; for(let i=0;i<n;i++) s+=S.st(fn(base+i*step)); return s; };
+  const nNeck=nRows(K.s_neck), TR=S.trim||undefined;
+
+  if(!hood){
+    if(ns==='polo'){
+      const PW=p.PW||1.25, PL=p.PL||6, CW=p.CW||2.75, nb=+K.btn||3, xo=w0+CW*0.45, yo=sl(xo)+0.15;
+      if(!back){
+        det+=S.shape(`M${pt([-w0+0.25,0.15])} Q${pt([0,-0.05])} ${pt([w0-0.25,0.15])} L${pt([PW/2,ND])} L${pt([-PW/2,ND])}Z`,S.shade);
+        det+=S.shape(`M${pt([-w0+0.1,-0.45])} Q${pt([0,-0.7])} ${pt([w0-0.1,-0.45])} L${pt([w0-0.25,0.15])} Q${pt([0,-0.05])} ${pt([-w0+0.25,0.15])}Z`,TR);
+        det+=S.shape(`M${pt([-PW/2,ND])} L${pt([PW/2,ND])} L${pt([PW/2,ND+PL])} L${pt([-PW/2,ND+PL])}Z`);
+        det+=rows(nRows(K.s_plk),q=>`M${pt([-PW/2+q,ND+0.2])} L${pt([-PW/2+q,ND+PL-q])} L${pt([PW/2-q,ND+PL-q])} L${pt([PW/2-q,ND+0.2])}`,0.12,gap);
+        for(let i=0;i<nb;i++){ const y=ND+0.75+i*(PL-1.6)/Math.max(1,nb-1);
+          det+=`<circle cx="0" cy="${fx(y)}" r="0.2" fill="${S.fill}" stroke="${S.line}" stroke-width="${fx(S.lw*0.6)}"/>`+S.ln(`M0 ${fx(y-0.32)} L0 ${fx(y+0.32)}`,0.35); }
+        for(const sg of [-1,1]){ const P=q=>[q[0]*sg,q[1]];
+          const P0=[0.12,ND+0.05], P1=[w0-0.1,-0.45], P2=[xo,yo], P3=[PW/2+CW*0.75,ND+CW*0.95];
+          det+=S.shape(`M${pt(P(P0))} C${pt(P([0.6,ND*0.5]))} ${pt(P([w0-0.5,-0.1]))} ${pt(P(P1))} Q${pt(P([w0+CW*0.2,-0.45]))} ${pt(P(P2))} Q${pt(P([w0+CW*0.55,ND*0.6+CW*0.4]))} ${pt(P(P3))} L${pt(P(P0))}Z`,TR);
+          det+=S.ln(`M${pt(P([xo-0.1,yo+0.3]))} Q${pt(P([w0+CW*0.42,ND*0.6+CW*0.4]))} ${pt(P([P3[0]-0.3,P3[1]-0.35]))} L${pt(P([0.45,ND+0.2]))}`,0.3);
+        }
+        anchors.neck=[xo+0.9,yo+0.8]; anchors.s_plk=[PW/2+0.9,ND+PL*0.6];
+      } else {
+        det+=S.shape(`M${pt([-w0-0.2,-0.45])} Q${pt([0,-0.75])} ${pt([w0+0.2,-0.45])} L${pt([xo,yo])} Q${pt([0,CW*0.85+0.3])} ${pt([-xo,yo])}Z`,TR);
+        det+=S.ln(`M${pt([-xo+0.3,yo+0.05])} Q${pt([0,CW*0.85])} ${pt([xo-0.3,yo+0.05])}`,0.3);
+        anchors.neck=[xo+0.9,yo+0.4];
+      }
+    } else if(ns==='mock'){
+      const yS=back?BND*0.6:dM, top=bz('crew',w0-0.25,-MH,yS-MH*(back?0.85:1)), seam=bz('crew',w0,0,yS);
+      if(!back) det+=S.shape(`M${pt([-w0+0.25,-MH])} Q${pt([0,-MH+0.3])} ${pt([w0-0.25,-MH])}`+bzSeg(bzRev(top))+'Z',S.shade);
+      det+=S.shape(bzPath(top)+` L${pt([w0,0])}`+bzSeg(bzRev(seam))+'Z',TR);
+      if(K.ribTex) det+=ribBetween(S,top,seam,Math.round(NW/0.35));
+      det+=S.st(bzPath(bz('crew',w0-0.25,-MH+0.3,yS-MH*(back?0.85:1)+0.3)));
+      det+=rows(nNeck,q=>bzPath(bz('crew',w0+q,sl(w0+q),yS+q)),0.15,gap);
+      anchors.s_neck=[0,yS+0.9]; anchors.neck=[w0+1.3,-MH*0.5];
+    } else {
+      const dep=back?BND:ND, style=back?'crew':(isV?'vneck':'crew'), kk=back?1:vk;
+      const open=bz(style,w0,0,dep), seam=bz(style,w0+bw,sl(w0+bw),dep+bw*kk);
+      if(!back){
+        det+=S.shape(bzPath(bz('crew',w0,0,BND))+bzSeg(bzRev(open))+'Z',S.shade);
+        det+=S.ln(bzPath(bz('crew',w0-0.1,0.05,BND+bw*0.9)),0.45);
+        if(K.tape){ det+=S.ln(bzPath(bz('crew',w0-0.2,0.1,BND+bw*0.9+0.45)),0.45); det+=S.st(bzPath(bz('crew',w0-0.15,0.08,BND+bw*0.9+0.22))); }
+      } else if(K.tape) det+=S.st(bzPath(bz('crew',w0+bw+0.45,sl(w0+bw+0.45),BND+bw+0.45)));
+      if(ns==='crew'||isV) det+=S.trimFill(bzPath(open)+` L${pt(seam[1][3])}`+bzSeg(bzRev(seam))+'Z');
+      det+=S.ln(bzPath(seam));
+      if(isV&&!back) det+=S.ln(`M${pt([0,ND])} L${pt([0,ND+bw*vk])}`);
+      if((ns==='crew'||isV)&&K.ribTex) det+=ribBetween(S,open,seam,Math.round((NW+bw*2)/0.32));
+      if(ns==='bind') det+=rows(nNeck,q=>bzPath(bz(style,w0+bw-q,sl(w0+bw-q),dep+bw*kk-q)),bw*0.45,gap);
+      else det+=rows(nNeck,q=>bzPath(bz(style,w0+bw+q,sl(w0+bw+q),dep+bw*kk+q)),0.12,gap);
+      anchors.neck=[w0+bw+1.0,0.9]; anchors.s_neck=[0,dep+bw*kk+1.0];
+    }
+    // ชายเสื้อ: ทรง + การเก็บขอบ
+    const yH=(back&&hs==='drop')?L+HS:L;
+    const curveRow=q=>{ const c=curveR.map(v=>[v[0]*(1-0.015),v[1]-q]); return `M${pt(mx(c[0]))} C${pt(mx(c[1]))} ${pt(mx(c[2]))} ${pt(c[3])} C${pt(c[2])} ${pt(c[1])} ${pt(c[0])}`; };
+    const hemRow=q=>hs==='curve'?curveRow(q):`M${pt([-H/2+0.2,yH-q])} L${pt([H/2-0.2,yH-q])}`;
+    if(hs==='drop'&&!back){
+      behind+=S.shape(`M${pt([-H/2+0.12,L-0.5])} L${pt([H/2-0.12,L-0.5])} L${pt([H/2-0.12,L+HS])} L${pt([-H/2+0.12,L+HS])}Z`);
+      if(!rawHem) behind+=rows(nRows(K.s_hem),q=>`M${pt([-H/2+0.3,L+HS-q])} L${pt([H/2-0.3,L+HS-q])}`,1.0,-gap);
+      else behind+=fray([[-H/2+0.12,L+HS],[H/2-0.12,L+HS]],[0,1],S);
+    }
+    if(hs==='slit') for(const sg of [-1,1]) det+=S.ln(`M${pt([sg*(H/2-0.4),L-HS])} L${pt([sg*(H/2-0.02),L-HS])}`,2.2);
+    if(!rawHem) det+=rows(nRows(K.s_hem),hemRow,1.0,-gap);
+    else if(hs==='curve'){ const pts=cubicPts(curveR,10); det+=fray(pts.concat(pts.slice().reverse().map(mx).slice(1)),[0,1],S); }
+    else det+=fray([[-H/2,yH],[H/2,yH]],[0,1],S);
+    anchors.s_hem=[H/2-2.2,(hs==='curve'?L-HS*0.4:yH)-1.8]; anchors.hemShape=[-H/2+1.6,(hs==='curve'||hs==='slit'?L-HS:yH)-1.2];
+  } else {
+    const HH=o.look?p.HH*0.45:p.HH, HW=p.HW, three=K.hood==='3';
+    const hoodPts=[[-w0-0.2,0.3],[-HW/2+0.35,-HH*0.3],[-HW/2,-HH*0.62],[-HW*0.34,-HH*0.9],[0,-HH],[HW*0.34,-HH*0.9],[HW/2,-HH*0.62],[HW/2-0.35,-HH*0.3],[w0+0.2,0.3]];
+    const hoodOuter=`M${pt(hoodPts[0])}`+crSeg(hoodPts);
+    if(!back){
+      behind=S.shape(hoodOuter+'Z');
+      if(!o.look){
+        const op=[[0,ND],[-NW*0.45,ND*0.15],[-HW*0.36,-HH*0.38],[-HW*0.3,-HH*0.72],[0,-HH+1.2],[HW*0.3,-HH*0.72],[HW*0.36,-HH*0.38],[NW*0.45,ND*0.15],[0,ND]];
+        if(three) behind+=S.ln(`M${pt([-1.5,-HH+1.3])} Q${pt([-1.6,-HH+0.5])} ${pt([-1.55,-HH+0.06])} M${pt([1.5,-HH+1.3])} Q${pt([1.6,-HH+0.5])} ${pt([1.55,-HH+0.06])}`);
+        front+=S.shape(`M${pt(op[0])}`+crSeg(op)+'Z',S.shade);
+        front+=rows(nRows(K.s_hood),q=>{ const pp=[[-0.6-q,ND-0.3-q]].concat(op.slice(1,-1).map(v=>[v[0]*(1.12+q*0.12),v[1]-0.3-q]),[[0.6+q,ND-0.3-q]]); return `M${pt(pp[0])}`+crSeg(pp); },0,gap);
+        anchors.hood=[HW*0.18,-HH*0.92]; anchors.s_hood=[-HW*0.47,-HH*0.45];
+      } else {
+        front+=S.ln(`M${pt([-w0,0.1])} Q${pt([-NW*0.2,ND*0.8])} ${pt([0,ND])} Q${pt([NW*0.2,ND*0.8])} ${pt([w0,0.1])}`,0.8);
+      }
+      if(K.cord){
+        const ex=zip?1.5:1.0, ey=ND-(zip?1.3:0.9);
+        for(const sgn of [-1,1]){
+          const e=[sgn*ex,ey], t=[sgn*(ex+0.25),ND+8];
+          front+=`<circle cx="${fx(e[0])}" cy="${fx(e[1])}" r="0.18" fill="${S.fill}" stroke="${S.line}" stroke-width="${fx(S.lw*0.5)}"/>`;
+          front+=S.ln(`M${pt(e)} C${pt([e[0]+sgn*0.1,ey+3])} ${pt([t[0]-sgn*0.15,t[1]-3])} ${pt(t)}`,0.9);
+          front+=S.ln(`M${pt(t)} L${pt([t[0],t[1]+1.2])}`,2.4);
+        }
+      }
+    } else {
+      front+=S.shape(hoodOuter+` C${pt([w0,0.9])} ${pt([NW*0.25,1.4])} ${pt([0,1.4])} C${pt([-NW*0.25,1.4])} ${pt([-w0,0.9])} ${pt(hoodPts[0])}Z`);
+      if(three){ front+=S.ln(`M-1.55 ${fx(-HH+0.06)} Q-1.45 ${fx(-HH*0.4)} -1.3 1.38 M1.55 ${fx(-HH+0.06)} Q1.45 ${fx(-HH*0.4)} 1.3 1.38`);
+        front+=S.st(`M-1.8 ${fx(-HH+0.25)} Q-1.7 ${fx(-HH*0.4)} -1.55 1.3 M1.8 ${fx(-HH+0.25)} Q1.7 ${fx(-HH*0.4)} 1.55 1.3`); }
+      else { front+=S.ln(`M0 ${fx(-HH)} L0 1.4`); front+=S.st(`M-0.25 ${fx(-HH+0.3)} L-0.25 1.2 M0.25 ${fx(-HH+0.3)} L0.25 1.2`); }
+      anchors.hood=[2.6,-HH*0.55];
+    }
+    // ชาย
+    const yr=L-RB;
+    if(RB>0){
+      det+=S.trimFill(`M${pt([-C/2,yr])} L${pt([C/2,yr])} L${pt([H/2,L])} L${pt([-H/2,L])}Z`);
+      det+=S.ln(`M${pt([-C/2,yr])} L${pt([C/2,yr])}`,0.7);
+      const m=Math.round(C/0.45); let rib='';
+      for(let k=1;k<m;k++){const t=k/m; rib+=`M${pt([-C/2+C*t,yr+0.1])} L${pt([-H/2+H*t,L-0.1])} `;}
+      det+=S.rib(rib);
+      det+=rows(nRows(K.s_hem),q=>`M${pt([-C/2+0.1,yr-q])} L${pt([C/2-0.1,yr-q])}`,0.15,gap);
+    } else det+=rows(nRows(K.s_hem),q=>`M${pt([-H/2+0.15,L-q])} L${pt([H/2-0.15,L-q])}`,1.0,-gap);
+    anchors.finish=[C/2-1.6,L-Math.max(RB,1.2)/2]; anchors.s_hem=[-C/2+1.6,yr-1.2];
+    if(!back){
+      const yb=RB>0?yr:L-1.6, yt=yb-p.PH, pt_=C*0.2, pb=C*0.36, yo=yt+p.PH*0.62;
+      const nP=nRows(K.s_pkt);
+      const openPath=(sg,q)=>`M${pt([sg*(pt_-q),yt+0.05])} C${pt([sg*(pt_+0.6-q),yt+p.PH*0.25])} ${pt([sg*(pb-0.9-q),yt+p.PH*0.45])} ${pt([sg*(pb-q),yo+0.1])}`;
+      const openRows=sg=>rows(nP,q=>openPath(sg,q),0.3,gap)+(S.depth?`<path d="${openPath(sg,0.16)}" fill="none" stroke="#000" stroke-opacity=".22" stroke-width="0.3" stroke-linecap="round"/>`:'');
+      const pk=K.pkt||'kanga';
+      if(pk==='side'){
+        for(const sg of [-1,1]){ const a=[sg*(C/2-3.0),yb-p.PH], b=[sg*(C/2-1.0),yb-1.2];
+          det+=S.ln(`M${pt(a)} L${pt(b)}`,0.8);
+          det+=rows(nP,q=>`M${pt([a[0]-sg*q,a[1]+q*0.3])} L${pt([b[0]-sg*q,b[1]+q*0.3])}`,0.25,gap);
+          det+=S.ln(`M${pt([a[0]-sg*0.05,a[1]-0.25])} L${pt([a[0]-sg*0.05,a[1]+0.25])} M${pt([b[0]-sg*0.05,b[1]-0.25])} L${pt([b[0]-sg*0.05,b[1]+0.25])}`,1.6); }
+        anchors.s_pkt=[C/2-3.4,yb-p.PH*0.35]; anchors.pkt=[-(C/2-3.4),yb-p.PH*0.35];
+      }
+      if(zip){
+        if(pk==='kanga') for(const sg of [-1,1]){ const P=q=>[q[0]*sg,q[1]];
+          det+=S.shape(`M${pt(P([0.45,yt]))} L${pt(P([pt_,yt]))} C${pt(P([pt_+0.6,yt+p.PH*0.25]))} ${pt(P([pb-0.9,yt+p.PH*0.45]))} ${pt(P([pb,yo]))} L${pt(P([pb,yb]))} L${pt(P([0.45,yb]))}Z`);
+          det+=rows(nP,q=>`M${pt([sg*0.55,yt+q])} L${pt([sg*(pt_-0.1),yt+q])}`,0.3,gap)+openRows(sg); }
+        det+=S.shape(`M${pt([-0.22,ND])} L${pt([0.22,ND])} L${pt([0.22,L])} L${pt([-0.22,L])}Z`);
+        det+=`<path d="M0 ${fx(ND+0.1)} L0 ${fx(L-0.1)}" stroke="${S.line}" stroke-width="${fx(S.lw*1.6)}" stroke-dasharray="0.08 0.08" opacity=".55"/>`;
+        det+=S.shape(`M${pt([0.12,ND+0.2])} L${pt([0.5,ND+0.2])} L${pt([0.5,ND+1.5])} L${pt([0.12,ND+1.5])}Z`);
+        for(const sg of [-1,1]) det+=rows(nRows(K.s_zip),q=>`M${pt([sg*q,ND+0.2])} L${pt([sg*q,L-0.1])}`,0.36,gap);
+        anchors.s_zip=[-1.1,ND+5];
+      } else if(pk==='kanga'){
+        det+=S.shape(`M${pt([-pt_,yt])} L${pt([pt_,yt])} C${pt([pt_+0.6,yt+p.PH*0.25])} ${pt([pb-0.9,yt+p.PH*0.45])} ${pt([pb,yo])} L${pt([pb,yb])} L${pt([-pb,yb])} L${pt([-pb,yo])} C${pt([-pb+0.9,yt+p.PH*0.45])} ${pt([-pt_-0.6,yt+p.PH*0.25])} ${pt([-pt_,yt])}Z`);
+        det+=rows(nP,q=>`M${pt([-pt_+0.1,yt+q])} L${pt([pt_-0.1,yt+q])}`,0.3,gap)+openRows(1)+openRows(-1);
+      }
+      if(pk==='kanga'){ anchors.s_pkt=[pt_*0.45+(zip?0.6:0),yt+p.PH*0.55]; anchors.pkt=[-pt_*0.45-(zip?0.6:0),yt+p.PH*0.55]; }
+    }
+  }
+  // ตะเข็บวงแขน (ฝั่งตัวเสื้อ)
+  const nA=nRows(K.s_arm);
+  if(nA){ const arm=q=>{ const s=[-q,0]; return `M${pt(add(sh,[-q,0.1]))} C${pt(add(c1,s))} ${pt(add(c2,s))} ${pt(add(U,s))}`; };
+    let a=rows(nA,arm,0.15,gap); det+=a+a.replace(/(-?\d+\.?\d*) (-?\d+\.?\d*)/g,(m,x,y)=>fx(-x)+' '+y); }
+  anchors.s_arm=[(sh[0]+U[0])/2-1.3,(sh[1]+U[1])/2];
+
+  // แขนเสื้อ
+  const sleeveR=`M${pt(sh)} L${pt(A)} L${pt(B)} L${pt(Us)} C${pt(rc2)} ${pt(rc1)} ${pt(sh)}Z`;
+  const M=s=>s.replace(/(-?\d+\.?\d*) (-?\d+\.?\d*)/g,(m,x,y)=>fx(-x)+' '+y);
+  let sdet='';
+  const nS=nRows(hood?K.s_hem:K.s_slv);
+  if(CF>0){
+    const A2=sub(A,mul(dS,CF)), B2=add(B,mul(dU,CF)); sdet+=S.trimFill(`M${pt(A2)} L${pt(B2)} L${pt(B)} L${pt(A)}Z`)+S.ln(`M${pt(A2)} L${pt(B2)}`,0.7);
+    const m=Math.max(4,Math.round(SO/0.42)); let r='';
+    for(let k=1;k<m;k++){const t=k/m; r+=`M${pt(lerp(A2,B2,t))} L${pt(lerp(A,B,t))} `;} sdet+=S.rib(r);
+    sdet+=rows(nS,q=>`M${pt(sub(A2,mul(dS,q)))} L${pt(add(B2,mul(dU,q)))}`,0.15,gap);
+  } else if(!hood&&K.slvFin==='raw'){
+    sdet+=fray([A,B],dS,S);
+  } else {
+    sdet+=rows(nS,q=>`M${pt(sub(A,mul(dS,q)))} L${pt(add(B,mul(dU,q)))}`,0.9,-gap);
+  }
+  if(!hood){ anchors.s_slv=sub(lerp(A,B,0.5),mul(dS,2.0)); anchors.slvFin=sub(lerp(A,B,0.35),mul(dS,CF>0?CF/2:0.45)); }
+  const sTop=lerp(sh,A,0.5), sUnd=lerp(Us,B,0.5);
+  const sleeves=S.shape(sleeveR,S.slvR)+depthSleeve(S,sleeveR,sTop,sUnd)+sdet+S.shape(M(sleeveR),S.slvL)+depthSleeve(S,M(sleeveR),mx(sTop),mx(sUnd))+M(sdet);
+
+  let dims='';
+  if(!o.look && !back && o.dims!=='off'){
+    const D=mkDim(type,o);
+    dims+=D('C',[-C/2,AH+1],[C/2,AH+1],C);
+    dims+=D('L',[-w0-0.9,0],[-w0-0.9,L],L);
+    dims+=D('S',[-Sh/2,SS],[Sh/2,SS],Sh,[0,1.3]);
+    dims+=D('SL',sh,A,SL,mul(n,-1.0));
+    dims+=D('SO',A,B,SO,mul(dS,1.0));
+    dims+=D('AH',[U[0]-1.4,SS],[U[0]-1.4,AH],AH);
+    dims+=D('H',[-H/2,L],[H/2,L],H,[0,1.2]);
+  }
+  const extra=(!o.look&&!back&&o.dims!=='off')?1.6:0;
+  const ys=[hood?-(o.look?p.HH*0.45:p.HH):(ns==='mock'?-MH-0.5:-1), L+(hs==='drop'?HS:0)+(extra?2.2:0.5), A[1],B[1]];
+  const xs=[Math.abs(A[0])+extra,Math.abs(B[0])+extra,C/2,H/2,Sh/2,hood?p.HW/2:0];
+  return {behind, main:torso+det+front+sleeves, dims, anchors, bounds:{x:Math.max(...xs), y0:Math.min(...ys), y1:Math.max(...ys)}};
+}
+
+/* ---------- กางเกง ---------- */
+function buildBottom(type,p,o,S){
+  const K=o.cons||consOf(type), gap=+K.gap||0.25, back=!!o.back, anchors={};
+  const {W,Hp,R,T:Th,K:Kn,O,I,WB,KN}=p, CF=type==='sweat'?(p.CF||0):0;
+  const yh=Math.max(WB+1.5,R*0.72), yt=R+1, yH=R+I, yk=Math.min(R+KN,yH-1.5);
+  const xo=Math.max(Hp/2,0.85*Th+0.3), xi=xo-0.85*Th, ct=(xo+xi)/2;
+  const ch=Math.max(ct+0.8,O/2+0.1), ck=Math.max(lerp([ct,0],[ch,0],(yk-yt)/Math.max(1,yH-yt))[0],Kn/2+0.1);
+  const outR=[[W/2+0.05,WB],[Hp/2,yh],[xo,yt],[ck+Kn/2,yk],[ch+O/2,yH]];
+  const inR=[[0,R],[xi,yt],[ck-Kn/2,yk],[ch-O/2,yH]];
+  const rev=a=>a.slice().reverse(), M=a=>a.map(mx);
+  let d=`M${pt([-W/2,0])} L${pt([W/2,0])} L${pt(outR[0])}`+crSeg(outR)+` L${pt(inR[3])}`+crSeg(rev(inR))+crSeg(M(inR))+` L${pt(mx(outR[4]))}`+crSeg(rev(M(outR)))+` L${pt([-W/2,0])}Z`;
+  const outX=y=>{ for(let i=0;i<outR.length-1;i++){const a=outR[i],b=outR[i+1]; if(y<=b[1]) return a[0]+(b[0]-a[0])*((y-a[1])/(b[1]-a[1]||1));} return outR[outR.length-1][0]; };
+  const rows=(n,fn,base,step)=>{ let s=''; for(let i=0;i<n;i++) s+=S.st(fn(base+i*step)); return s; };
+  let det=S.ln(`M${pt([-W/2-0.05,WB])} L${pt([W/2+0.05,WB])}`,0.7);
+  const loop=x=>S.shape(`M${pt([x-0.22,-0.2])} L${pt([x+0.22,-0.2])} L${pt([x+0.22,WB+0.3])} L${pt([x-0.22,WB+0.3])}Z`);
+  const nHem=nRows(K.s_hem);
+  if(type==='jeans'){
+    const nW=nRows(K.s_wb);
+    if(nW){ det+=S.st(`M${pt([-W/2+0.1,0.2])} L${pt([W/2-0.1,0.2])}`); det+=rows(nW,q=>`M${pt([-W/2+0.1,WB-q])} L${pt([W/2-0.1,WB-q])}`,0.2,gap); }
+    if(!back){
+      det+=S.ln(`M0 ${fx(WB)} L0 ${fx(R)}`);
+      det+=rows(nRows(K.s_fly),q=>`M${pt([1.3+q,WB])} L${pt([1.3+q,R-2.3-q*0.3])} Q${pt([1.3+q,R-0.9+q*0.6])} ${pt([0,R-0.7+q*0.9])}`,0,gap);
+      det+=`<circle cx="0.2" cy="${fx(WB/2)}" r="0.3" fill="${S.fill}" stroke="${S.line}" stroke-width="${fx(S.lw*0.6)}"/>`;
+      anchors.s_wb=[W/2-2.4,WB/2]; anchors.s_fly=[2.3,R-3.6]; anchors.s_pkt=[W/2-2.3,WB+2.7];
+    } else {
+      const ys=WB+1.6, yc=WB+3.6, yoke=x=>yc-(yc-ys)*Math.min(1,Math.abs(x)/outX(ys));
+      det+=S.ln(`M${pt([-outX(ys),ys])} L${pt([0,yc])} L${pt([outX(ys),ys])}`);
+      const nY=nRows(K.s_yoke);
+      det+=rows(nY,q=>`M${pt([-outX(ys+q),ys+q])} L${pt([0,yc+q])} L${pt([outX(ys+q),ys+q])}`,0.35,gap);
+      det+=S.ln(`M0 ${fx(WB)} L0 ${fx(R)}`); if(nY) det+=rows(nY,q=>`M${fx(q)} ${fx(yc+0.3)} L${fx(q)} ${fx(R-0.5)}`,0.3,gap);
+      for(const sg of [-1,1]){
+        const cx=sg*Math.max(3.4,Hp/4+0.2), pw=Math.min(6,Hp*0.29), ph=pw*1.1, top=yoke(cx)+0.8;
+        const P=[[cx-pw/2,top],[cx+pw/2,top],[cx+pw/2-0.15,top+ph*0.82],[cx,top+ph],[cx-pw/2+0.15,top+ph*0.82]];
+        det+=S.shape('M'+P.map(pt).join(' L')+'Z');
+        det+=rows(nRows(K.s_bpkt),q=>{ const k=1-2*(0.25+q)/pw; return 'M'+P.map(v=>pt([cx+(v[0]-cx)*k,top+(v[1]-top)*k+0.25+q*0.4])).join(' L')+'Z'; },0,gap);
+        if(sg>0) anchors.s_bpkt=[cx,top+ph*0.45];
+      }
+      det+=loop(0);
+      anchors.s_yoke=[-2.5,yc-(yc-ys)*2.5/outX(ys)-0.75];
+    }
+    for(const sg of [-1,1]){
+      if(!back){
+        const st=[sg*(W/2-3.8),WB], ey=WB+5.2, en=[sg*outX(ey),ey];
+        det+=S.ln(`M${pt(st)} C${pt([sg*(W/2-3.6),WB+3.5])} ${pt([en[0]-sg*2.0,ey-0.3])} ${pt(en)}`,0.7);
+        det+=rows(nRows(K.s_pkt),q=>`M${pt([st[0]-sg*(0.35+q),WB])} C${pt([sg*(W/2-3.95-q),WB+3.8+q*0.2])} ${pt([en[0]-sg*(2.2+q),ey+0.05+q])} ${pt([sg*outX(ey+0.4+q),ey+0.4+q])}`,0,gap);
+        const rivet=q=>`<circle cx="${fx(q[0])}" cy="${fx(q[1])}" r="0.13" fill="${S.line}"/>`;
+        if(K.coin&&sg<0){ const x1=-(W/2-3.2), x2=-(W/2-0.9), yb=WB+2.5;
+          det+=S.shape(`M${pt([x1,WB])} L${pt([x1+0.08,yb])} L${pt([x2-0.05,yb])} L${pt([x2,WB])}Z`);
+          det+=S.st(`M${pt([x1+0.3,WB+0.4])} L${pt([x2-0.25,WB+0.4])}`)+S.st(`M${pt([x1+0.2,WB+0.6])} L${pt([x1+0.26,yb-0.2])} L${pt([x2-0.2,yb-0.2])} L${pt([x2-0.17,WB+0.6])}`);
+          if(K.rivet) det+=rivet([x1+0.2,WB+0.25])+rivet([x2-0.18,WB+0.25]);
+          anchors.coin=[(x1+x2)/2,WB+1.4]; }
+        if(K.rivet){ det+=rivet([st[0]+sg*0.25,WB+0.3])+rivet([en[0]-sg*0.25,ey-0.1]); if(sg>0) anchors.rivet=[en[0]-1.1,ey+0.2]; }
+        for(const lx of [W/2-0.7,W/2-4.4]) det+=loop(sg*lx);
+      } else for(const lx of [W/2-0.7,W/2*0.45]) det+=loop(sg*lx);
+      det+=rows(nHem,q=>`M${pt([sg*(ch-O/2)+sg*0.15,yH-q])} L${pt([sg*(ch+O/2)-sg*0.15,yH-q])}`,0.6,gap);
+    }
+  } else {
+    det+=S.trimFill(`M${pt([-W/2,0])} L${pt([W/2,0])} L${pt([W/2+0.05,WB])} L${pt([-W/2-0.05,WB])}Z`)+S.ln(`M${pt([-W/2-0.05,WB])} L${pt([W/2+0.05,WB])}`,0.7);
+    let ru=''; for(let x=-W/2+0.4;x<W/2-0.2;x+=0.5) ru+=`M${fx(x)} 0.2 L${fx(x+0.05)} ${fx(WB-0.2)} `; det+=S.rib(ru);
+    const nW=nRows(K.s_wb); for(let i=0;i<nW;i++){ const y=WB*(i+1)/(nW+1); det+=S.st(`M${pt([-W/2+0.1,y])} L${pt([W/2-0.1,y])}`); }
+    if(back) det+=S.ln(`M0 ${fx(WB)} L0 ${fx(R)}`);
+    for(const sg of [-1,1]){
+      if(!back){
+        if(K.cord){ const e=[sg*0.55,WB*0.55], t=[sg*1.0,WB+6.5];
+          det+=`<circle cx="${fx(e[0])}" cy="${fx(e[1])}" r="0.16" fill="${S.fill}" stroke="${S.line}" stroke-width="${fx(S.lw*0.5)}"/>`;
+          det+=S.ln(`M${pt(e)} C${pt([e[0],WB+2])} ${pt([t[0]-sg*0.2,t[1]-2.5])} ${pt(t)}`,0.9)+S.ln(`M${pt(t)} L${pt([t[0],t[1]+1.1])}`,2.4); }
+        const a=[sg*(outX(WB+0.8)-2.2),WB+0.8], b=[sg*outX(WB+7.5),WB+7.5];
+        det+=S.ln(`M${pt(a)} L${pt(b)}`,0.7);
+        det+=rows(nRows(K.s_pkt),q=>`M${pt([a[0]-sg*q,a[1]])} L${pt([b[0]-sg*q,b[1]])}`,0.3,gap);
+      }
+      if(CF>0){
+        const yc=yH-CF, li=sg*(ch-O/2), lo=sg*(ch+O/2);
+        det+=S.trimFill(`M${pt([li,yc])} L${pt([lo,yc])} L${pt([lo,yH])} L${pt([li,yH])}Z`);
+        det+=S.ln(`M${pt([li,yc])} L${pt([lo,yc])}`,0.7);
+        let r=''; const m=Math.round(O/0.42); for(let k=1;k<m;k++){const x=li+(lo-li)*k/m; r+=`M${fx(x)} ${fx(yc+0.1)} L${fx(x)} ${fx(yH-0.1)} `;} det+=S.rib(r);
+        det+=rows(nHem,q=>`M${pt([li+sg*0.15,yc-q])} L${pt([lo-sg*0.15,yc-q])}`,0.15,gap);
+      } else det+=rows(nHem,q=>`M${pt([sg*(ch-O/2)+sg*0.15,yH-q])} L${pt([sg*(ch+O/2)-sg*0.15,yH-q])}`,0.9,-gap);
+    }
+    if(!back){ anchors.s_wb=[W/2-2.4,WB/2]; anchors.s_pkt=[outX(WB+4)-1.7,WB+4.2]; }
+  }
+  anchors.s_hem=[ch,yH-(CF>0?CF+1.2:1.8)];
+  let dims='';
+  if(!o.look && !back && o.dims!=='off'){
+    const D=mkDim(type,o);
+    dims+=D('W',[-W/2,0],[W/2,0],W,[0,-1.1]);
+    dims+=D('Hp',[-Hp/2,yh],[Hp/2,yh],Hp);
+    const rx=-Math.max(Hp/2,xo)-1.4;
+    dims+=D('R',[rx,0],[rx,R],R);
+    dims+=`<path d="M${pt([-W/2,0])} L${pt([rx,0])} M${pt([0,R])} L${pt([rx,R])}" stroke="${DIM}" stroke-width="0.018" stroke-dasharray="0.12 0.1" fill="none" opacity=".7"/>`;
+    dims+=D('T',[xi,yt],[xo,yt],Th);
+    dims+=D('K',[ck-Kn/2,yk],[ck+Kn/2,yk],Kn);
+    dims+=D('O',[ch-O/2,yH],[ch+O/2,yH],O,[0,1.2]);
+    const a=[0,R], b=mx(inR[3]), dv=norm(sub(b,a)); let nv=[-dv[1],dv[0]]; if(nv[0]>0) nv=mul(nv,-1);
+    dims+=D('I',a,b,I,mul(nv,1.3));
+  }
+  const ext=(!o.look&&!back&&o.dims!=='off')?2.4:0.5;
+  let depth='';
+  if(S.depth){ // เงากางเกง: ข้างขาแต่ละข้าง ใต้ขอบเอว ช่วงเป้า
+    const xa=Math.min(xi,ch-O/2), xb=Math.max(xo,ch+O/2), gR=S.lin(xa,0,xb,0,[[0,.2],[.22,0],[.78,0],[1,.2]]), gL=S.lin(-xb,0,-xa,0,[[0,.2],[.22,0],[.78,0],[1,.2]]);
+    const wb=S.lin(0,WB,0,WB+1,[[0,.22],[1,0]]), cr=S.rad(0,R+0.4,3,.24,1.3);
+    const g=[gR,gL,wb,cr];
+    depth=S.clipShade(d,`<defs>${g.map(x=>x.def).join('')}</defs><rect x="0" y="${fx(WB)}" width="300" height="300" fill="url(#${gR.id})"/><rect x="-300" y="${fx(WB)}" width="300" height="300" fill="url(#${gL.id})"/><rect ${BIG} fill="url(#${wb.id})"/><rect ${BIG} fill="url(#${cr.id})"/>`);
+  }
+  return {main:S.shape(d)+depth+det, dims, anchors, R, yH, ch, O,
+    bounds:{x:Math.max(W/2,Hp/2,xo,ch+O/2,ck+Kn/2)+ext, y0:-0.4-(ext>1?1.8:0), y1:yH+ext}};
+}
+
+/* ---------- หุ่น (สัดส่วนคนจริง 7.5 หัว ตามตัวเลข fit model) ---------- */
+function figure(){
+  const b=state.body, cm=v=>v/2.54, H=cm(+b.height||175);
+  const sh=cm(+b.shoulder||45)/2*1.04, ch=cm(+b.chest||94)*0.345/2, wa=cm(+b.waist||78)*0.35/2, hi=cm(+b.hip||95)*0.355/2;
+  const yc=H-cm(+b.inseam||80), yn=0.18*H, yarm=0.25*H, ychest=0.29*H, yw=0.385*H, yhip=yc-0.05*H, yk=yc+(H-yc)*0.4, ya=H-0.045*H;
+  const k=hi/(0.099*H), L=v=>v*H*k;
+  const inner=[[0,yc],[L(0.006),yc+0.03*H],[L(0.014),yc+0.12*H],[L(0.018),yk],[L(0.022),yk+0.08*H],[L(0.022),ya-0.05*H],[L(0.022),ya],[L(0.02),H-0.015*H],[L(0.018),H]];
+  const outer=[[L(0.07),H],[L(0.066),H-0.015*H],[L(0.058),ya],[L(0.072),yk+0.15*H],[L(0.08),yk+0.08*H],[L(0.074),yk+0.02*H],[L(0.077),yk-0.015*H],[L(0.088),yk-0.09*H],[hi*0.97,yc+0.02*H],[hi,yhip],[(hi+wa)/2,(yhip+yw)/2],[wa,yw],[(wa+ch)/2,(yw+ychest)/2],[ch,ychest],[ch*1.04,yarm],[sh,yn+0.035*H],[sh*0.9,yn+0.013*H],[0.07*H,yn+0.003*H],[0.038*H,yn-0.008*H],[0.033*H,yn-0.04*H]];
+  const right=inner.concat(outer), left=right.slice(1).reverse().map(mx), pts=right.concat(left.slice(0,-1));
+  const path=`M${pt(pts[0])}`+crSeg(pts,true)+'Z';
+  const svg=`<path d="${path}" fill="#e7e4de"/><ellipse cx="0" cy="${fx(0.067*H)}" rx="${fx(0.05*H)}" ry="${fx(0.066*H)}" fill="#e7e4de"/>`;
+  return {svg,H,yn,yc,yw,yhip,ya,floor:H,x:Math.max(sh,hi,L(0.088))};
+}
+
+/* ---------- แหล่งชุด ---------- */
+function source(key){
+  if(key&&key.startsWith('lib:')){ const it=lib.find(x=>'lib:'+x.id===key); if(it) return {type:it.type,params:Object.assign({},defaults().params[it.type],it.params),cons:Object.assign(consDefaults(it.type),it.cons||{}),name:it.name}; }
+  const t=(key||'').slice(4); if(T[t]) return {type:t,params:state.params[t],cons:state.cons[t],name:T[t].name};
+  return null;
+}
+
+/* ---------- วาด ---------- */
+const stage=document.getElementById('stage');
+let lastVB=null, lastFlatOffset=0;
+function scaleBar(x,y){
+  let bar=`<g><path d="M${fx(x)} ${fx(y)} L${fx(x+10)} ${fx(y)}" stroke="#111" stroke-width="0.06"/>`;
+  for(let i=0;i<=10;i++) bar+=`<path d="M${fx(x+i)} ${fx(y)} L${fx(x+i)} ${fx(y-(i%5===0?0.35:0.18))}" stroke="#111" stroke-width="0.04"/>`;
+  return bar+`<text x="${fx(x+10.3)}" y="${fx(y+0.05)}" font-size="0.5" fill="#111">10 นิ้ว</text></g>`;
+}
+function svgWrap(inner,vb,forExport){
+  const [x,y,w,h]=vb;
+  let g='';
+  if(!forExport && state.style.grid)
+    g=`<defs><pattern id="gr" width="1" height="1" patternUnits="userSpaceOnUse"><path d="M1 0 L0 0 0 1" fill="none" stroke="#ecebe7" stroke-width="0.03"/></pattern></defs><rect x="${fx(x)}" y="${fx(y)}" width="${fx(w)}" height="${fx(h)}" fill="url(#gr)"/>`;
+  const bg=forExport&&!document.getElementById('transp').checked?`<rect x="${fx(x)}" y="${fx(y)}" width="${fx(w)}" height="${fx(h)}" fill="#ffffff"/>`:'';
+  const size=forExport?` width="${Math.round(w*forExport)}" height="${Math.round(h*forExport)}"`:'';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${fx(x)} ${fx(y)} ${fx(w)} ${fx(h)}"${size} preserveAspectRatio="xMidYMid meet" font-family="Helvetica Neue, Arial, Thonburi, sans-serif">${bg}${g}${inner}</svg>`;
+}
+/* ---------- ผ้าจริง ---------- */
+function fabOf(t){ const f=fabrics[t]; return f&&f.src?f:null; }
+function fabTile(f){ const r=f.tile&&f.rep?f.rep:{w:1,h:1}, W=+f.w*r.w, H=+f.w*f.ratio*r.h, m=f.mirror==='mirror'; return {W,H,pw:m?2*W:W,ph:m?2*H:H,m}; }
+/* ctx = จุดอ้างอิงการต่อลาย ของทรงนั้น
+   { ya: ระดับแนวนอนที่ใช้ตั้งลาย (เสื้อ = เส้นอก, กางเกง = เส้นสะโพก),
+     sleeves: [{a:[x,y] จุดกลางวงแขน, ang: องศาหมุนให้แนวผ้าตามแนวแขน}] } */
+function fabCtx(type,p,angle){
+  if(T[type].cat!=='top') return {ya:Math.max(p.WB+1.5,p.R*0.72),sleeves:null};
+  const sh=[p.S/2,p.SS], U=rot([p.C/2,p.AH],sh,angle-p.ANG), a=lerp(sh,U,0.5);
+  return {ya:p.AH+1,sleeves:[{s:'R',a,ang:angle-90},{s:'L',a:mx(a),ang:90-angle}]};
+}
+function fabDefs(f,id,ctx){ // pattern ขนาดจริงเป็นนิ้ว · id = ผ้าปกติ, idS = ด้านในคอ/ฮู้ด (เข้มขึ้นเล็กน้อย), idR/idL = แขนขวา/ซ้าย
+  const {W,H,pw,ph,m}=fabTile(f), e=Math.max(0.02,W*0.004); // ขยายรูปนิดเดียวกันเส้นรอยต่อระหว่างแผ่น
+  const use=tr=>`<use href="#${id}I"${tr?` transform="${tr}"`:''}/>`;
+  let tile=use('');
+  if(m) tile+=use(`translate(${fx(2*W)} 0) scale(-1 1)`)+use(`translate(0 ${fx(2*H)}) scale(1 -1)`)+use(`translate(${fx(2*W)} ${fx(2*H)}) scale(-1 -1)`);
+  const centre=f.center!==false, ya=ctx?ctx.ya:0, tone=f.tone==null?0.85:+f.tone;
+  const TONE=tone<0.999?`<rect width="${fx(pw)}" height="${fx(ph)}" fill="#fff" opacity="${fx(1-tone)}"/>`:''; // ลดความเข้มลายให้เส้นอ่านง่าย
+  // จัดกลาง: ให้จุดกึ่งกลางแผ่นลายตรงกับกึ่งกลางหน้า (CF) และระดับอก/สะโพก ลายซ้ายขวาจึงเท่ากัน
+  const base=centre?` translate(${fx(-pw/2)} ${fx(-ph/2)})`:'';
+  const tr=`translate(${fx(+f.ox||0)} ${fx((+f.oy||0)+(centre?ya:0))}) rotate(${fx(+f.rot||0)})${base}`;
+  const pat=(pid,extra,t)=>`<pattern id="${pid}" patternUnits="userSpaceOnUse" x="0" y="0" width="${fx(pw)}" height="${fx(ph)}" patternTransform="${t||tr}">${tile}${extra}</pattern>`;
+  let s=`<defs><image id="${id}I" href="${f.tile&&f.rep?f.tile:f.src}" x="0" y="0" width="${fx(W+e)}" height="${fx(H+e)}" preserveAspectRatio="none"/>`
+    +pat(id,TONE)+pat(id+'S',TONE+`<rect width="${fx(pw)}" height="${fx(ph)}" fill="#000" opacity=".38"/>`);
+  // แขน: แนวผ้า (เส้นยืน) วิ่งตามแนวแขนจากไหล่ถึงปลายแขน แบบที่ตัดเย็บจริง
+  if(ctx&&ctx.sleeves) for(const sv of ctx.sleeves)
+    s+=pat(id+sv.s,TONE,`translate(${fx(sv.a[0])} ${fx(sv.a[1])}) rotate(${fx(sv.ang+(+f.rot||0))}) translate(${fx(-pw/2)} ${fx(-ph/2)})`);
+  return s+`</defs>`;
+}
+function fabBand(x,y,w,items){ // ป้ายภาพประกอบระดับ 2 (ติดเสมอเมื่อใส่ผ้าจริง)
+  const rh=1.5, h=1.35+items.length*rh+0.85;
+  let s=`<rect x="${fx(x)}" y="${fx(y)}" width="${fx(w)}" height="${fx(h)}" fill="#fff" stroke="#111" stroke-width="0.04"/>`;
+  s+=`<rect x="${fx(x)}" y="${fx(y)}" width="${fx(w)}" height="1.05" fill="#111"/><text x="${fx(x+0.35)}" y="${fx(y+0.72)}" font-size="0.52" font-weight="700" fill="#fff" letter-spacing="0.03">ภาพประกอบจากผ้าจริง · ระดับ 2 · ILLUSTRATION FROM REAL FABRIC (NOT APPROVED SAMPLE)</text>`;
+  items.forEach((it,i)=>{ const f=it.f, yy=y+1.35+i*rh, tbc=`<tspan fill="${DIM}">[TBC]</tspan>`;
+    s+=`<rect x="${fx(x+0.35)}" y="${fx(yy)}" width="1.2" height="1.2" fill="url(#${it.id})" stroke="#111" stroke-width="0.03"/>`;
+    s+=`<text x="${fx(x+1.85)}" y="${fx(yy+0.45)}" font-size="0.46" font-weight="700" fill="#111">${it.label?esc(it.label)+' · ':''}ผ้า: ${f.name?esc(f.name):tbc}</text>`;
+    s+=`<text x="${fx(x+1.85)}" y="${fx(yy+1.0)}" font-size="0.38" fill="#6e6c68">ฟอก / สี / ล็อต: ${f.wash?esc(f.wash):tbc} · ขนาดลาย: ${f.measured?`เท่าของจริง (รูปผ้ากว้าง ${fmt(+f.w)}″)`:`ค่าประมาณ ${tbc} ยังไม่ได้วัดจากไม้บรรทัด`} · ช่องซ้าย = ผ้าขนาดจริง 1.2″</text>`; });
+  s+=`<text x="${fx(x+0.35)}" y="${fx(y+h-0.35)}" font-size="0.38" fill="#6e6c68">สีและผิวผ้าจริงอาจต่างจากภาพเล็กน้อย ให้ใช้ swatch และ Sample จริงเป็นตัวตัดสิน ห้ามใช้ภาพนี้แทน Approved Sample</text>`;
+  return {svg:s,h};
+}
+function titleBlock(x,y,w,cells){ // กรอบข้อมูลท้ายภาพ
+  const h=2.2, cw=w/cells.length;
+  let s=`<rect x="${fx(x)}" y="${fx(y)}" width="${fx(w)}" height="${h}" fill="#fff" stroke="#111" stroke-width="0.04"/>`;
+  cells.forEach((c,i)=>{ const cx=x+cw*i;
+    if(i) s+=`<path d="M${fx(cx)} ${fx(y)} L${fx(cx)} ${fx(y+h)}" stroke="#111" stroke-width="0.03"/>`;
+    s+=`<text x="${fx(cx+0.35)}" y="${fx(y+0.75)}" font-size="0.42" fill="#6e6c68">${esc(c[0])}</text><text x="${fx(cx+0.35)}" y="${fx(y+1.6)}" font-size="${i===0?0.62:0.55}" font-weight="700" fill="#111">${esc(c[1])}</text>`; });
+  return {svg:s,h};
+}
+function pomTable(x,y,type,p,size){
+  const rows=T[type].fields; const w=10.5, rh=0.9;
+  let s=`<text x="${fx(x)}" y="${fx(y)}" font-size="0.5" font-weight="700" fill="#111">POINTS OF MEASURE · นิ้ว · ไซซ์ ${esc(size||'[TBC]')}</text>`;
+  rows.forEach((f,i)=>{ const yy=y+0.6+i*rh;
+    s+=`<rect x="${fx(x)}" y="${fx(yy)}" width="${w}" height="${rh}" fill="${i%2?'#fff':'#f7f6f3'}"/>`;
+    s+=`<circle cx="${fx(x+0.5)}" cy="${fx(yy+rh/2)}" r="0.32" fill="#fff" stroke="${DIM}" stroke-width="0.04"/><text x="${fx(x+0.5)}" y="${fx(yy+rh/2+0.14)}" text-anchor="middle" font-size="0.38" font-weight="700" fill="${DIM}">${f[6]}</text>`;
+    s+=`<text x="${fx(x+1.1)}" y="${fx(yy+rh/2+0.15)}" font-size="0.42" fill="#111">${esc(f[1])} · ${esc(f[2])}</text>`;
+    s+=`<text x="${fx(x+w-0.3)}" y="${fx(yy+rh/2+0.17)}" text-anchor="end" font-size="0.48" font-weight="700" fill="#111">${fmt(p[f[0]])}</text>`; });
+  s+=`<path d="M${fx(x)} ${fx(y+0.6+rows.length*rh)} L${fx(x+w)} ${fx(y+0.6+rows.length*rh)}" stroke="#111" stroke-width="0.03"/>`;
+  return {svg:s,w,h:0.6+rows.length*rh};
+}
+function notesOf(t){ return String((state.notes||{})[t]||'').split('\n').map(s=>s.trim()).filter(Boolean).slice(0,12); }
+function ctag(x,y,n){ return `<rect x="${fx(x-0.3)}" y="${fx(y-0.3)}" width="0.6" height="0.6" rx="0.08" fill="#111"/><text x="${fx(x)}" y="${fx(y+0.15)}" text-anchor="middle" font-size="0.4" font-weight="700" fill="#fff">${n}</text>`; }
+function consTable(x,y,type,K,set,p){ // ตารางวิธีเย็บ
+  const nums=tagNums(type,K), rows=consVisible(type,K).map(c=>[c,null]).concat(notesOf(type).map(n=>[null,n])), w=19, rh=0.9;
+  let s=`<text x="${fx(x)}" y="${fx(y)}" font-size="0.5" font-weight="700" fill="#111">CONSTRUCTION · วิธีเย็บ</text>`;
+  rows.forEach(([c,note],i)=>{ const yy=y+0.6+i*rh, cy=yy+rh/2;
+    s+=`<rect x="${fx(x)}" y="${fx(yy)}" width="${w}" height="${rh}" fill="${i%2?'#fff':'#f7f6f3'}"/>`;
+    if(note!==null){ s+=`<text x="${fx(x+0.5)}" y="${fx(cy+0.15)}" text-anchor="middle" font-size="0.45" fill="#111">•</text><text x="${fx(x+1.1)}" y="${fx(cy+0.15)}" font-size="0.4" fill="#6e6c68">หมายเหตุ</text><text x="${fx(x+6.3)}" y="${fx(cy+0.15)}" font-size="0.42" font-weight="700" fill="#111">${esc(note)}</text>`; return; }
+    if(nums[c.k]) s+=ctag(x+0.5,cy,nums[c.k]);
+    s+=`<text x="${fx(x+1.1)}" y="${fx(cy+0.15)}" font-size="0.4" fill="#6e6c68">${esc(c.label)}</text>`;
+    s+=`<text x="${fx(x+6.3)}" y="${fx(cy+0.15)}" font-size="0.42" font-weight="700" fill="#111">${esc(consText(type,K,c,p))}${set[c.k]?'':`<tspan fill="${DIM}"> [TBC]</tspan>`}</text>`; });
+  s+=`<path d="M${fx(x)} ${fx(y+0.6+rows.length*rh)} L${fx(x+w)} ${fx(y+0.6+rows.length*rh)}" stroke="#111" stroke-width="0.03"/>`;
+  return {svg:s,w,h:0.6+rows.length*rh};
+}
+
+function flatInner(forExport){
+  const t=state.type, fab=fabOf(t), fid='fab_'+t, S=styler(fab,fid), p=state.params[t], st=state.style, cat=T[t].cat, info=state.info[t];
+  const views=(st.views==='both'&&!photo)?['front','back']:['front'];
+  const K=state.cons[t], nums=tagNums(t,K);
+  const build=(v)=>cat==='top'?buildTop(t,p,{dims:st.dims,back:v==='back',cons:K},S):buildBottom(t,p,{dims:st.dims,back:v==='back',cons:K},S);
+  const parts=views.map(build);
+  const fig=st.ghost?figure():null;
+  const figOff=fig?(cat==='top'?-fig.yn:p.R-(fig.yc+1)):0;
+  let half=Math.max(...parts.map(r=>r.bounds.x)); if(fig) half=Math.max(half,fig.x+1);
+  let y0=Math.min(...parts.map(r=>r.bounds.y0)), y1=Math.max(...parts.map(r=>r.bounds.y1));
+  if(fig){ y0=Math.min(y0,figOff-0.5); y1=Math.max(y1,figOff+fig.floor+0.5); }
+  const gap=1.5, offs=views.length===2?[-(half+gap),half+gap]:[0];
+  lastFlatOffset=offs[0];
+  let inner=fab?fabDefs(fab,fid,fabCtx(t,p,p.ANG||0)):'';
+  if(photo && !forExport)
+    inner+=`<image id="phImg" href="${photo.src}" x="${fx(photo.x)}" y="${fx(photo.y)}" width="${fx(photo.w)}" height="${fx(photo.w*photo.ratio)}" opacity="${photo.op/100}" preserveAspectRatio="none"/>`;
+  views.forEach((v,i)=>{ const r=parts[i];
+    let g='';
+    if(fig) g+=`<g transform="translate(0 ${fx(figOff)})" opacity=".85">${fig.svg}</g>`;
+    if(st.guides && !forExport){
+      g+=`<path d="M0 ${fx(y0)} L0 ${fx(y1)}" stroke="#2b6cb0" stroke-width="0.03" stroke-dasharray="0.3 0.15" opacity=".6"/>`;
+      if(fig) for(const yy of [fig.yw,fig.yhip,fig.yc]) g+=`<path d="M${fx(-half)} ${fx(yy+figOff)} L${fx(half)} ${fx(yy+figOff)}" stroke="#2b6cb0" stroke-width="0.025" stroke-dasharray="0.3 0.15" opacity=".45"/>`;
+    }
+    g+=(r.behind||'')+r.main+r.dims;
+    if(st.ctags) for(const k in r.anchors){ if(!nums[k]) continue; if(k.startsWith('s_')&&!nRows(K[k])) continue; if(K[k]===false) continue; g+=ctag(r.anchors[k][0],r.anchors[k][1],nums[k]); }
+    g+=`<text x="0" y="${fx(y1+1.0)}" text-anchor="middle" font-size="0.6" font-weight="700" letter-spacing="0.08" fill="#111">${v==='front'?'FRONT · ด้านหน้า':'BACK · ด้านหลัง'}</text>`;
+    inner+=`<g transform="translate(${fx(offs[i])} 0)">${g}</g>`;
+  });
+  if(photo && !forExport && calib&&calib.pts.length) inner+=calib.pts.map(q=>`<circle cx="${fx(q[0])}" cy="${fx(q[1])}" r="0.35" fill="none" stroke="${DIM}" stroke-width="0.08"/>`).join('');
+  let xL=offs[0]-half-1, xR=offs[offs.length-1]+half+1, yB=y1+2;
+  let colY=y0+0.6, colW=0;
+  if(st.dims==='pom'){ const tb=pomTable(xR+0.5,colY,t,p,info.size); inner+=tb.svg; colY+=tb.h+1.3; colW=tb.w; }
+  if(st.ctags){ const tb=consTable(xR+0.5,colY,t,K,state.consSet[t],p); inner+=tb.svg; colY+=tb.h+1; colW=Math.max(colW,tb.w); }
+  if(colW){ xR+=colW+1.5; y1=Math.max(y1,colY); yB=Math.max(yB,y1+2); }
+  if(st.bar){ inner+=scaleBar(xL+0.5,yB+0.6); yB+=1.4; }
+  if(fab){ const b=fabBand(xL,yB+0.2,xR-xL,[{f:fab,id:fid}]); inner+=b.svg; yB+=b.h+0.2; }
+  if(st.tblock){
+    const tb=titleBlock(xL,yB+0.2,xR-xL,[['NWL STUDIO','FLAT SKETCH'],['ชื่อแบบ / Style',info.name||'[TBC]'],['ชนิด / Type',T[t].en],['ไซซ์ที่วัด / Size',info.size||'[TBC]'],['เวอร์ชัน / Ver.',info.ver||'[TBC]'],['วันที่ / หน่วย',new Date().toLocaleDateString('th-TH')+' · นิ้ว']]);
+    inner+=tb.svg; yB+=tb.h+0.4;
+  }
+  return {inner,vb:[xL,y0-1.5,xR-xL,yB-(y0-1.5)+0.6]};
+}
+
+function lookOne(look,S,fig,used){
+  const top=source(look.top), bot=source(look.bottom);
+  // ผ้าจริงใช้กับทรงที่กำลังแก้ (cur:) เท่านั้น ทรงจากคลังยังเป็นสีเรียบ
+  const Sof=(key,src)=>{ const t=key&&key.startsWith('cur:')?src.type:null, f=t&&fabOf(t); if(!f) return S; used[t]={f,ctx:fabCtx(t,src.params,+state.lookAngle)}; return styler(f,'fab_'+t); };
+  let inner=fig.svg, sum=[], guides=[], maxX=fig.x+0.5, minY=-1.5;
+  const floor=fig.floor, ankle=fig.ya;
+  inner+=`<path d="M${fx(-fig.x*1.6)} ${fx(floor)} L${fx(fig.x*1.6)} ${fx(floor)}" stroke="#b9b5ad" stroke-width="0.06"/>`;
+  let pantsY=0, bb=null;
+  if(bot){
+    const r=buildBottom(bot.type,bot.params,{look:true,cons:bot.cons},Sof(look.bottom,bot)); bb=r;
+    pantsY=fig.yc+(+look.drop||0)-r.R;
+    const excess=pantsY+r.yH-floor; let fold='';
+    if(excess>0.3){ const nF=Math.min(4,Math.ceil(excess/1.4));
+      for(let k=0;k<nF;k++){ const y=floor-0.6-k*1.1;
+        for(const sg of [-1,1]){ const a=sg*(r.ch-r.O/2), b=sg*(r.ch+r.O/2); let dd=`M${fx(a)} ${fx(y)}`;
+          for(let i=1;i<=4;i++){ const x0=a+(b-a)*(i-0.5)/4, x1=a+(b-a)*i/4; dd+=` Q${fx(x0)} ${fx(y+(i%2?0.35:-0.35))} ${fx(x1)} ${fx(y)}`; }
+          fold+=S.ln(dd,0.5); } } }
+    const cid='fl'+Math.random().toString(36).slice(2,7);
+    inner+=`<defs><clipPath id="${cid}"><rect x="-200" y="-200" width="400" height="${fx(200+floor)}"/></clipPath></defs><g clip-path="url(#${cid})"><g transform="translate(0 ${fx(pantsY)})">${r.main}</g></g>${fold}`;
+    maxX=Math.max(maxX,r.bounds.x);
+    guides.push([pantsY,'ขอบเอวกางเกง'],[pantsY+r.R,'เป้ากางเกง'],[Math.min(pantsY+r.yH,floor),'ปลายขา']);
+    if(excess>0.3) sum.push(`ขากางเกงยาวเกินพื้น <b>${fmt(excess)}″</b> จะกองที่ข้อเท้า/รองเท้า`);
+    else if(pantsY+r.yH>=ankle) sum.push(`ปลายขาอยู่ระหว่างข้อเท้ากับพื้น (เหนือพื้น ${fmt(floor-pantsY-r.yH)}″)`);
+    else sum.push(`ปลายขาอยู่เหนือข้อเท้า <b>${fmt(ankle-pantsY-r.yH)}″</b> (ทรงครอป/โชว์ข้อเท้า)`);
+  }
+  if(top){
+    const r=buildTop(top.type,top.params,{look:true,lookAngle:+state.lookAngle,cons:top.cons},Sof(look.top,top));
+    inner=`<g transform="translate(0 ${fx(fig.yn)})">${r.behind}</g>`+inner+`<g transform="translate(0 ${fx(fig.yn)})">${r.main}</g>`;
+    maxX=Math.max(maxX,r.bounds.x); minY=Math.min(minY,fig.yn+r.bounds.y0-1);
+    const hem=fig.yn+top.params.L; guides.push([hem,'ชายเสื้อ']);
+    if(bb){ const dW=hem-pantsY, dC=hem-(pantsY+bb.R);
+      sum.unshift(dW>0?`ชายเสื้อคลุมขอบเอวกางเกงลงมา <b>${fmt(dW)}″</b>`:`ชายเสื้ออยู่เหนือขอบเอวกางเกง <b>${fmt(-dW)}″</b> (เห็นขอบกางเกง)`);
+      sum.splice(1,0,dC>0?`ชายเสื้อยาวเลยเป้าลงไป <b>${fmt(dC)}″</b>`:`ชายเสื้ออยู่เหนือเป้า <b>${fmt(-dC)}″</b>`); }
+  }
+  return {inner,sum,guides,maxX,minY,name:[top&&top.name,bot&&bot.name].filter(Boolean).join(' + ')};
+}
+
+function lookInner(forExport){
+  const S=styler(), fig=figure(), looks=state.looks, used={};
+  const res=looks.map(l=>lookOne(l,S,fig,used));
+  const single=res.length===1;
+  let x=0, inner=Object.keys(used).map(t=>fabDefs(used[t].f,'fab_'+t,used[t].ctx)).join(''), minY=Math.min(-1.5,...res.map(r=>r.minY)), xs=[];
+  res.forEach((r,i)=>{ const cx=i===0?0:x+r.maxX+1.5; xs.push(cx); x=cx+r.maxX+(single?0:0);
+    let g=r.inner;
+    if(single){ const gx=r.maxX+0.8; const gs=r.guides.slice().sort((a,b)=>a[0]-b[0]); let lastY=-99;
+      for(const [y,lab] of gs){ const ty=Math.max(y,lastY+0.9); lastY=ty;
+        g+=`<path d="M${fx(r.maxX*0.55)} ${fx(y)} L${fx(gx)} ${fx(y)} L${fx(gx+0.4)} ${fx(ty)}" stroke="${DIM}" stroke-width="0.035" stroke-dasharray="0.15 0.1" fill="none"/><text x="${fx(gx+0.6)}" y="${fx(ty+0.2)}" font-size="0.6" font-weight="700" fill="${DIM}">${lab}</text>`; } }
+    g+=`<text x="0" y="${fx(fig.floor+1.4)}" text-anchor="middle" font-size="0.75" font-weight="800" letter-spacing="0.1" fill="#111">LOOK ${i+1}</text>`;
+    inner+=`<g transform="translate(${fx(cx)} 0)">${g}</g>`;
+  });
+  const xL=-res[0].maxX-2, xR=xs[xs.length-1]+res[res.length-1].maxX+(single?7:2);
+  let yB=fig.floor+2.4;
+  if(state.style.bar){ inner+=scaleBar(xL+0.5,yB+0.4); yB+=1.2; }
+  const ft=Object.keys(used);
+  if(ft.length){ const b=fabBand(xL,yB+0.2,xR-xL,ft.map(t=>({f:used[t],id:'fab_'+t,label:T[t].name}))); inner+=b.svg; yB+=b.h+0.2; }
+  if(state.style.tblock){ const b=state.body;
+    const tb=titleBlock(xL,yB+0.2,xR-xL,[['NWL STUDIO','LINE-UP'],['จำนวนลุค',String(res.length)],['หุ่น / Fit model',`${fmt(+b.height)} ซม. · อก ${fmt(+b.chest)} · เอว ${fmt(+b.waist)}`],['วันที่ / หน่วย',new Date().toLocaleDateString('th-TH')+' · นิ้ว']]);
+    inner+=tb.svg; yB+=tb.h+0.4; }
+  const sumHtml=res.map((r,i)=>`<div class="sumh">LOOK ${i+1} · ${esc(r.name)}</div><ul class="sum">${r.sum.map(s=>`<li>${s}</li>`).join('')}</ul>`).join('')
+    +`<p class="hint">หุ่นสูง ${fmt(+state.body.height)} ซม. (${fmt(fig.H)}″) ไม่รวมรองเท้า</p>`;
+  return {inner,vb:[xL,minY,xR-xL,yB-minY+0.6],sumHtml};
+}
+
+function render(){
+  let r;
+  if(state.mode==='flat'){ r=flatInner(false); }
+  else { r=lookInner(false); document.getElementById('lkSum').innerHTML=r.sumHtml; }
+  lastVB=r.vb;
+  stage.innerHTML=svgWrap(r.inner,r.vb,0);
+  const t=state.type;
+  document.getElementById('pvInfo').textContent = state.mode==='flat' ? `${T[t].name} · มาตราส่วนจริง (1 ช่อง = 1 นิ้ว)` : `ไลน์อัป ${state.looks.length} ลุค · มาตราส่วนเดียวกันทุกชิ้น`;
+  document.getElementById('pvWarn').textContent = state.mode==='flat'?checkWarn():bodyWarn();
+  stage.classList.toggle('cal',!!calib); stage.classList.toggle('drag',!!photo&&!calib&&state.mode==='flat');
+  save();
+}
+function checkWarn(){
+  const t=state.type, p=state.params[t], n=allFields(t).filter(f=>!state.edited[t][f[0]]&&f[5]==='s').length;
+  if(T[t].cat==='top'){ if(p.H>p.C*1.35) return 'ชายเสื้อกว้างกว่าอกมาก ลองเช็กตัวเลขอีกครั้ง'; if(p.SO>p.AH*1.1) return 'ปลายแขนกว้างกว่าวงแขน ลองเช็กตัวเลข'; }
+  else { if(p.W>p.Hp) return 'เอวกว้างกว่าสะโพก ลองเช็กตัวเลข'; if(p.O>p.T) return 'ปลายขากว้างกว่าต้นขา (ทรงขาบาน) ถ้าไม่ใช่ ลองเช็กตัวเลข'; }
+  return n?`ยังมีค่าตัวอย่าง ${n} ช่อง`:'';
+}
+function bodyWarn(){ const n=BODY.filter(b=>!state.body.edited[b[0]]).length; return n?`สัดส่วนหุ่นยังเป็นค่าตัวอย่าง ${n} ช่อง`:''; }
+
+/* ---------- ฟอร์ม ---------- */
+const $=id=>document.getElementById(id);
+function buildTypeSelect(){ $('type').innerHTML=Object.keys(T).map(k=>`<option value="${k}">${T[k].name}</option>`).join(''); }
+function buildFields(){
+  const t=state.type, p=state.params[t];
+  const row=f=>{ const [k,th,en,how,,src,code]=f; const ed=state.edited[t][k];
+    const b= ed?'':(src==='r'?'<span class="badge r">จากตาราง</span>':'<span class="badge s">ตัวอย่าง</span>');
+    return `<div class="fl">${code?`<span style="color:${DIM}">${code}</span> `:''}${th}${b}<small>${en} · ${how}</small></div><input type="number" step="0.25" min="0" data-k="${k}" value="${p[k]}">`; };
+  $('fieldsMain').innerHTML=T[t].fields.map(row).join('');
+  $('fieldsDetail').innerHTML=T[t].detail.map(row).join('');
+  $('srcNote').textContent=T[t].note||'';
+  $('angBox').classList.toggle('hide',T[t].cat!=='top');
+  $('ang').value=p.ANG; $('angV').textContent=p.ANG+'°';
+  const inf=state.info[t]; $('infName').value=inf.name; $('infVer').value=inf.ver; $('infSize').value=inf.size;
+  buildCons(); syncFab();
+}
+
+/* ---------- ผ้าจริง: แผงควบคุม ---------- */
+function syncFab(){
+  const f=fabOf(state.type), on=!!f;
+  $('fbFor').textContent=T[state.type].name;
+  $('fbDel').classList.toggle('hide',!on); $('fbCtl').classList.toggle('hide',!on);
+  $('fbBtn').textContent=on?'เปลี่ยนรูปผ้า':'เลือกรูปผ้า';
+  if(!on) return;
+  const {pw,ph}=fabTile(f);
+  $('fbThumb').src=f.tile||f.src; $('fbRepTxt').textContent=repText(f);
+  for(const [id,v] of [['fbRw',f.rep?f.rep.w:1],['fbRh',f.rep?f.rep.h:1]]){ $(id).value=(v*100).toFixed(1); $(id+'V').textContent=(v*100).toFixed(1)+'%'; }
+  $('fbName').value=f.name||''; $('fbWash').value=f.wash||''; $('fbW').value=f.w; $('fbMeas').checked=!!f.measured;
+  $('fbRot').value=f.rot||0; $('fbRotV').textContent=(f.rot||0)+'°';
+  for(const [id,lim] of [['fbOx',pw],['fbOy',ph]]){ const el=$(id); el.min=fx(-lim); el.max=fx(lim); const k=id==='fbOx'?'ox':'oy'; el.value=f[k]||0; $(id+'V').textContent=fmt(+f[k]||0)+'″'; }
+  $('fbMode').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===(f.mirror||'tile')));
+  $('fbCenter').checked=f.center!==false;
+  const seg=(id,v)=>$(id).querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  seg('fbLine',f.lineMode||'halo'); seg('fbIn',f.inside||'same'); seg('fbTrim',f.trim||'solid');
+  const tone=f.tone==null?0.85:+f.tone; $('fbTone').value=Math.round(tone*100); $('fbToneV').textContent=Math.round(tone*100)+'%';
+  $('fbDepth').checked=f.depth!==false;
+  const auto=f.autoColor||'#555555';
+  $('fbTrimC').value=f.trimColor||auto; $('fbInC').value=f.inColor||((f.inside==='base')?mixHex(auto,'#ffffff',0.6):'#2b2b2b');
+  $('fbInCBox').classList.toggle('hide',(f.inside||'same')==='same');
+  if(!f.autoColor) loadImg(f.tile||f.src).then(im=>{ f.autoColor=dominantColor(im); fabSaved(); syncFab(); render(); }).catch(()=>{});
+  $('fbSlvBox').classList.toggle('hide',T[state.type].cat!=='top');
+  $('fbSlv').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===(f.slv||'grain')));
+}
+$('fbCenter').addEventListener('change',e=>fabSet('center',e.target.checked,true));
+for(const [id,k] of [['fbLine','lineMode'],['fbIn','inside'],['fbTrim','trim']]) $(id).addEventListener('click',e=>{ const v=e.target.dataset.v; if(!v) return; if(k==='inside'){ const f=fabOf(state.type); if(f) delete f.inColor; } fabSet(k,v,true); });
+$('fbTone').addEventListener('input',e=>{ $('fbToneV').textContent=e.target.value+'%'; fabSet('tone',+e.target.value/100); });
+$('fbDepth').addEventListener('change',e=>fabSet('depth',e.target.checked));
+$('fbTrimC').addEventListener('input',e=>fabSet('trimColor',e.target.value));
+$('fbInC').addEventListener('input',e=>fabSet('inColor',e.target.value));
+$('fbAutoC').onclick=()=>{ const f=fabOf(state.type); if(!f) return; delete f.trimColor; delete f.inColor; delete f.autoColor; fabSaved(); syncFab(); render(); };
+/* สีหลักของผ้า: นับสีที่เจอบ่อยที่สุด (แบ่งสีเป็นกลุ่ม) ใช้เป็นสีจั๊ม/ปกตั้งต้น */
+function dominantColor(img){
+  const M=120, k=Math.min(1,M/Math.max(img.naturalWidth,img.naturalHeight)), w=Math.max(4,Math.round(img.naturalWidth*k)), h=Math.max(4,Math.round(img.naturalHeight*k));
+  const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d'); g.drawImage(img,0,0,w,h);
+  const d=g.getImageData(0,0,w,h).data, bins={};
+  for(let i=0;i<d.length;i+=4){ const key=(d[i]>>5)+'-'+(d[i+1]>>5)+'-'+(d[i+2]>>5); const b=bins[key]||(bins[key]=[0,0,0,0]); b[0]+=d[i]; b[1]+=d[i+1]; b[2]+=d[i+2]; b[3]++; }
+  let best=null; for(const k in bins) if(!best||bins[k][3]>best[3]) best=bins[k];
+  return '#'+[0,1,2].map(i=>Math.round(best[i]/best[3]).toString(16).padStart(2,'0')).join('');
+}
+$('fbSlv').addEventListener('click',e=>{ const v=e.target.dataset.v; if(v) fabSet('slv',v,true); });
+function fabSaveMsg(r){ if(r===true) return ''; return r==='quota'?'จำผ้าในเบราว์เซอร์ไม่ได้ เพราะพื้นที่เต็ม ลองเอาผ้าของชนิดอื่นออก':'หน้านี้จำผ้าไว้ไม่ได้ (เปิดในแถบของ Claude) ใช้ได้จนกว่าจะปิดหน้า ถ้าอยากให้จำ ให้ดับเบิลคลิกเปิดไฟล์ใน Chrome'; }
+let fabWarned=false;
+function fabSaved(){ const r=saveFab(); if(r!==true&&!fabWarned){ fabWarned=true; toast(fabSaveMsg(r)); } return r; }
+function fabSet(k,v,resync){ const f=fabOf(state.type); if(!f) return; f[k]=v; fabSaved(); if(resync) syncFab(); render(); }
+/* ยืนยันในหน้า (กดซ้ำ) แทนกล่อง confirm ของเบราว์เซอร์ ซึ่งบางที่ไม่ขึ้น เช่นแถบเบราว์เซอร์ของ Claude */
+function armed(btn,msg){
+  if(btn.dataset.armed==='1'){ clearTimeout(btn._t); btn.dataset.armed=''; btn.textContent=btn.dataset.label; btn.classList.remove('primary'); return true; }
+  btn.dataset.label=btn.textContent; btn.dataset.armed='1'; btn.textContent=msg||'กดอีกครั้งเพื่อยืนยัน'; btn.classList.add('primary');
+  btn._t=setTimeout(()=>{ btn.dataset.armed=''; btn.textContent=btn.dataset.label; btn.classList.remove('primary'); },3500);
+  return false;
+}
+$('fbBtn').onclick=()=>$('fbFile').click();
+$('fbDel').onclick=e=>{ if(!armed(e.currentTarget,'กดอีกครั้งเพื่อเอาผ้าออก')) return; delete fabrics[state.type]; fabSaved(); syncFab(); render(); toast('เอาผ้าออกแล้ว'); };
+
+/* ---------- ลายซ้ำ (repeat): หาขนาดลาย 1 รอบในรูปผ้า แล้วตัดให้พอดี ลายจะต่อเนียนไม่มีรอยขาด ---------- */
+function detectRepeat(img){
+  const M=240, k=Math.min(1,M/Math.max(img.naturalWidth,img.naturalHeight));
+  const w=Math.max(8,Math.round(img.naturalWidth*k)), h=Math.max(8,Math.round(img.naturalHeight*k));
+  const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d'); g.drawImage(img,0,0,w,h);
+  const d=g.getImageData(0,0,w,h).data;
+  const period=(N,diffAt)=>{ const lo=Math.max(4,Math.round(N*0.06)), hi=Math.round(N*0.9), sc=[];
+    for(let s=lo;s<=hi;s++) sc[s]=diffAt(s);
+    let mn=Infinity, sum=0, n=0; for(let s=lo;s<=hi;s++){ mn=Math.min(mn,sc[s]); sum+=sc[s]; n++; }
+    const mean=sum/n; let best=null;
+    for(let s=lo;s<=hi;s++){ const v=sc[s], l=sc[s-1]??Infinity, r=sc[s+1]??Infinity;
+      if(v<=l&&v<=r&&v<=mn+(mean-mn)*0.12){ best=s; break; } }
+    if(best==null) return null;
+    // หาจุดต่ำสุดละเอียดระดับเศษพิกเซล
+    const l=sc[best-1]??sc[best], r=sc[best+1]??sc[best], den=l-2*sc[best]+r, off=den>0?0.5*(l-r)/den:0;
+    return {s:best+Math.max(-0.5,Math.min(0.5,off)), conf:mean>0?sc[best]/mean:1}; };
+  const px=period(w,s=>{ let t=0,n=0; for(let y=0;y<h;y+=2) for(let x=0;x+s<w;x+=2){ const i=(y*w+x)*4, j=i+s*4; t+=Math.abs(d[i]-d[j])+Math.abs(d[i+1]-d[j+1])+Math.abs(d[i+2]-d[j+2]); n++; } return t/n; });
+  const py=period(h,s=>{ let t=0,n=0; for(let y=0;y+s<h;y+=2) for(let x=0;x<w;x+=2){ const i=(y*w+x)*4, j=i+s*w*4; t+=Math.abs(d[i]-d[j])+Math.abs(d[i+1]-d[j+1])+Math.abs(d[i+2]-d[j+2]); n++; } return t/n; });
+  return {rw:px?px.s/w:1, rh:py?py.s/h:1, okX:!!px&&px.conf<0.55, okY:!!py&&py.conf<0.55};
+}
+function loadImg(src){ return new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=rej; im.src=src; }); }
+async function applyRepeat(f,rw,rh){ // ตัดรูปตรงกลางให้เหลือลาย 1 รอบ (rw, rh = สัดส่วนของรูปเต็ม)
+  if(!(rw<0.999||rh<0.999)){ delete f.tile; delete f.rep; return; }
+  const im=await loadImg(f.src), W=im.naturalWidth, H=im.naturalHeight;
+  const cw=Math.max(4,Math.round(W*rw)), ch=Math.max(4,Math.round(H*rh)), x0=Math.round((W-cw)/2), y0=Math.round((H-ch)/2);
+  const c=document.createElement('canvas'); c.width=cw; c.height=ch; c.getContext('2d').drawImage(im,x0,y0,cw,ch,0,0,cw,ch);
+  f.tile=c.toDataURL('image/jpeg',0.9); f.rep={w:cw/W,h:ch/H};
+}
+async function autoRepeat(f,quiet){
+  const im=await loadImg(f.src), r=detectRepeat(im);
+  if(!r.okX&&!r.okY){ if(!quiet) toast('ไม่พบลายซ้ำชัดเจน ใช้รูปเต็มแทน (ผ้าเรียบหรือยีนส์ แนะนำ "ต่อแบบสะท้อน")'); await applyRepeat(f,1,1); return false; }
+  await applyRepeat(f,r.okX?r.rw:1,r.okY?r.rh:1);
+  toast(`พบลายซ้ำ ${r.okX?'แนวนอน':''}${r.okX&&r.okY?' + ':''}${r.okY?'แนวตั้ง':''} ตัดรูปให้พอดี 1 รอบแล้ว ลายจะต่อเนียน`);
+  return true;
+}
+function repText(f){ const {W,H}=fabTile(f);
+  return f.rep?`ใช้ลายซ้ำ 1 รอบ: กว้าง ${fmt(W)}″ × สูง ${fmt(H)}″ (ตัดจากกลางรูป ${Math.round(f.rep.w*100)}% × ${Math.round(f.rep.h*100)}%)`:'ใช้รูปเต็ม ยังไม่ได้ตัดลายซ้ำ ถ้าเป็นผ้าลายตาราง/ลายทาง แล้วเห็นรอยขาดตรงขอบแผ่น ให้กด "หาลายซ้ำอัตโนมัติ"'; }
+$('fbAuto').onclick=async()=>{ const f=fabOf(state.type); if(!f) return; await autoRepeat(f); fabSaved(); syncFab(); render(); };
+$('fbFull').onclick=async()=>{ const f=fabOf(state.type); if(!f) return; await applyRepeat(f,1,1); fabSaved(); syncFab(); render(); };
+for(const [id,k] of [['fbRw','w'],['fbRh','h']]) $(id).addEventListener('input',async e=>{ const f=fabOf(state.type); if(!f) return;
+  const rw=k==='w'?+e.target.value/100:(f.rep?f.rep.w:1), rh=k==='h'?+e.target.value/100:(f.rep?f.rep.h:1);
+  $(id+'V').textContent=(+e.target.value).toFixed(1)+'%'; await applyRepeat(f,rw,rh); render(); $('fbRepTxt').textContent=repText(f); });
+for(const id of ['fbRw','fbRh']) $(id).addEventListener('change',()=>{ fabSaved(); syncFab(); });
+$('fbFile').onchange=e=>{ const file=e.target.files[0]; if(!file) return; e.target.value='';
+  const rd=new FileReader(); rd.onload=()=>{ const im=new Image();
+    im.onload=()=>{ const M=1200, k=Math.min(1,M/Math.max(im.naturalWidth,im.naturalHeight)), c=document.createElement('canvas');
+      c.width=Math.max(1,Math.round(im.naturalWidth*k)); c.height=Math.max(1,Math.round(im.naturalHeight*k)); c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      const old=fabOf(state.type)||{};
+      const nf={src:c.toDataURL('image/jpeg',0.88),ratio:c.height/c.width,w:old.w||6,measured:false,rot:0,ox:0,oy:0,mirror:old.mirror||'tile',name:old.name||'',wash:old.wash||'',center:old.center,slv:old.slv};
+      fabrics[state.type]=nf; syncFab(); render();
+      (async()=>{ const found=nf.mirror==='tile'?await autoRepeat(nf,true):false;
+        const r=saveFab(); syncFab(); render();
+        toast(r!==true?fabSaveMsg(r):(found?'ใส่ผ้าแล้ว พบลายซ้ำและตัดให้ต่อเนียนแล้ว ต่อไปใส่ว่ารูปผ้ากว้างจริงกี่นิ้ว':'ใส่ผ้าแล้ว ต่อไปใส่ว่ารูปผ้ากว้างจริงกี่นิ้ว')); })(); };
+    im.onerror=()=>toast('เปิดรูปนี้ไม่ได้ ลองแปลงเป็น JPG หรือ PNG ก่อน');
+    im.src=rd.result; };
+  rd.readAsDataURL(file); };
+$('fbName').addEventListener('input',e=>fabSet('name',e.target.value.trim()));
+$('fbWash').addEventListener('input',e=>fabSet('wash',e.target.value.trim()));
+$('fbW').addEventListener('input',e=>{ const v=+e.target.value; if(v>=0.25) fabSet('w',v); });
+$('fbW').addEventListener('change',()=>syncFab());
+$('fbMeas').addEventListener('change',e=>fabSet('measured',e.target.checked));
+$('fbRot').addEventListener('input',e=>{ $('fbRotV').textContent=e.target.value+'°'; fabSet('rot',+e.target.value); });
+$('fbOx').addEventListener('input',e=>{ $('fbOxV').textContent=fmt(+e.target.value)+'″'; fabSet('ox',+e.target.value); });
+$('fbOy').addEventListener('input',e=>{ $('fbOyV').textContent=fmt(+e.target.value)+'″'; fabSet('oy',+e.target.value); });
+$('fbMode').addEventListener('click',e=>{ const v=e.target.dataset.v; if(v) fabSet('mirror',v,true); });
+function buildCons(){
+  const t=state.type, K=state.cons[t], set=state.consSet[t], nums=tagNums(t,K); $('consNotes').value=state.notes[t]||'';
+  $('consBox').innerHTML=consVisible(t,K).map(c=>{
+    const badge=set[c.k]?'':'<span class="badge s">ยังไม่ยืนยัน</span>', tag=nums[c.k]?`<span class="ctag">${nums[c.k]}</span>`:'';
+    let ctl;
+    if(c.type==='chk') ctl=`<label class="switch" style="margin:0"><input type="checkbox" data-c="${c.k}" ${K[c.k]?'checked':''}> ${K[c.k]?'มี':'ไม่มี'}</label>`;
+    else { const op=c.type==='st'?ST_OPTS:c.opts; ctl=`<select data-c="${c.k}">${op.map(o=>`<option value="${o[0]}"${String(K[c.k])===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select>`; }
+    return `<div class="fl">${tag}${c.label}${badge}<small>${c.en}</small></div>${ctl}`; }).join('');
+}
+$('consNotes').addEventListener('input',e=>{ state.notes[state.type]=e.target.value; render(); });
+$('consBox').addEventListener('change',e=>{ const k=e.target.dataset.c; if(!k) return; const t=state.type;
+  state.cons[t][k]=e.target.type==='checkbox'?e.target.checked:e.target.value; state.consSet[t][k]=true; buildCons(); render(); });
+function onField(e){
+  const k=e.target.dataset.k; if(!k) return; const v=parseFloat(e.target.value), t=state.type;
+  if(!(v>=0)){ e.target.classList.add('bad'); return; } e.target.classList.remove('bad');
+  state.params[t][k]=v; state.edited[t][k]=true;
+  const lab=e.target.previousElementSibling.querySelector('.badge'); if(lab) lab.remove();
+  render();
+}
+$('fieldsMain').addEventListener('input',onField); $('fieldsDetail').addEventListener('input',onField);
+$('fieldsMain').addEventListener('keydown',enterNext); $('fieldsDetail').addEventListener('keydown',enterNext);
+function enterNext(e){ if(e.key!=='Enter') return; const all=[...document.querySelectorAll('#flatPanel .fields input')]; const i=all.indexOf(e.target); if(i>=0&&all[i+1]){ e.preventDefault(); all[i+1].focus(); all[i+1].select(); } }
+$('type').addEventListener('change',e=>{ state.type=e.target.value; buildFields(); render(); });
+$('ang').addEventListener('input',e=>{ state.params[state.type].ANG=+e.target.value; $('angV').textContent=e.target.value+'°'; render(); });
+for(const [id,k] of [['infName','name'],['infVer','ver'],['infSize','size']]) $(id).addEventListener('input',e=>{ state.info[state.type][k]=e.target.value.trim(); render(); });
+
+function seg(id,key){ const el=$(id); const sync=()=>el.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===state.style[key]));
+  el.addEventListener('click',e=>{ const v=e.target.dataset.v; if(!v) return; state.style[key]=v; sync(); render(); }); sync(); }
+function bindStyle(){
+  const s=state.style;
+  $('lw').value=s.lw; $('lwV').textContent=(+s.lw).toFixed(3)+'″';
+  $('cLine').value=s.line; $('cFill').value=s.fill;
+  for(const k of ['stitch','shade','grid','bar','tblock','ghost','guides','ctags']) $(k).checked=!!s[k];
+  seg('segViews','views'); seg('segDims','dims');
+}
+$('lw').addEventListener('input',e=>{ state.style.lw=+e.target.value; $('lwV').textContent=(+e.target.value).toFixed(3)+'″'; render(); });
+$('cLine').addEventListener('input',e=>{ state.style.line=e.target.value; render(); });
+$('cFill').addEventListener('input',e=>{ state.style.fill=e.target.value; render(); });
+for(const k of ['stitch','shade','grid','bar','tblock','ghost','guides','ctags']) $(k).addEventListener('change',e=>{ state.style[k]=e.target.checked; render(); });
+
+/* ---------- แท็บ ---------- */
+function setMode(m){ state.mode=m; $('tabFlat').classList.toggle('on',m==='flat'); $('tabLook').classList.toggle('on',m==='look');
+  $('flatPanel').classList.toggle('hide',m!=='flat'); $('lookPanel').classList.toggle('hide',m!=='look'); if(m==='look') buildLook(); render(); }
+$('tabFlat').onclick=()=>setMode('flat'); $('tabLook').onclick=()=>setMode('look');
+
+function opts(cat){ return Object.keys(T).filter(k=>T[k].cat===cat).map(k=>`<option value="cur:${k}">${T[k].name} (กำลังแก้)</option>`).join('')
+  +lib.filter(x=>T[x.type]&&T[x.type].cat===cat).map(x=>`<option value="lib:${x.id}">คลัง · ${esc(x.name)}</option>`).join(''); }
+function buildLook(){
+  state.looks.forEach(l=>{ if(!source(l.top)) l.top='cur:zip'; if(!source(l.bottom)) l.bottom='cur:jeans'; });
+  $('lookList').innerHTML=state.looks.map((l,i)=>`<div class="look-item" data-i="${i}"><b>LOOK ${i+1}</b>
+    <select data-f="top">${opts('top')}</select><select data-f="bottom">${opts('bottom')}</select>
+    <span class="hint" style="margin:0">เป้าห้อย</span><input type="number" step="0.25" min="0" data-f="drop" value="${l.drop}">
+    ${state.looks.length>1?`<button class="small" data-del="${i}">ลบ</button>`:''}</div>`).join('');
+  document.querySelectorAll('#lookList .look-item').forEach(el=>{ const l=state.looks[+el.dataset.i];
+    el.querySelector('[data-f=top]').value=l.top; el.querySelector('[data-f=bottom]').value=l.bottom; });
+  const b=state.body;
+  $('bodyFields').innerHTML=BODY.map(([k,th,en])=>`<div class="fl">${th} (ซม.)${b.edited[k]?'':'<span class="badge s">ตัวอย่าง</span>'}<small>${en}</small></div><input type="number" step="0.5" min="0" data-b="${k}" value="${b[k]}">`).join('');
+  $('lkAng').value=state.lookAngle; $('lkAngV').textContent=state.lookAngle+'°';
+}
+$('lookList').addEventListener('change',e=>{ const it=e.target.closest('.look-item'); if(!it) return; const l=state.looks[+it.dataset.i], f=e.target.dataset.f;
+  if(f==='drop'){ const v=+e.target.value; if(v>=0) l.drop=v; } else if(f) l[f]=e.target.value; render(); });
+$('lookList').addEventListener('input',e=>{ if(e.target.dataset.f==='drop'){ const it=e.target.closest('.look-item'); const v=+e.target.value; if(v>=0){ state.looks[+it.dataset.i].drop=v; render(); } } });
+$('lookList').addEventListener('click',e=>{ const d=e.target.dataset.del; if(d==null) return; state.looks.splice(+d,1); buildLook(); render(); });
+$('lookAdd').onclick=()=>{ if(state.looks.length>=8) return toast('ไลน์อัปใส่ได้สูงสุด 8 ลุค'); const last=state.looks[state.looks.length-1]; state.looks.push(Object.assign({},last)); buildLook(); render(); };
+$('bodyFields').addEventListener('input',e=>{ const k=e.target.dataset.b; if(!k) return; const v=+e.target.value;
+  const lim={height:[120,220],shoulder:[25,70],chest:[60,160],waist:[50,150],hip:[60,160],inseam:[50,110]}[k];
+  if(!(v>=lim[0]&&v<=lim[1])){ e.target.classList.add('bad'); return; } e.target.classList.remove('bad');
+  state.body[k]=v; state.body.edited[k]=true; const lab=e.target.previousElementSibling.querySelector('.badge'); if(lab) lab.remove(); render(); });
+$('lkAng').oninput=e=>{state.lookAngle=+e.target.value;$('lkAngV').textContent=e.target.value+'°';render();};
+
+/* ---------- รูปเทียบ ---------- */
+$('phBtn').onclick=()=>$('phFile').click();
+$('phFile').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const rd=new FileReader();
+  rd.onload=()=>{ const im=new Image(); im.onload=()=>{ const ratio=im.naturalHeight/im.naturalWidth;
+      photo={src:rd.result,ratio,w:30,x:0,y:0,op:50}; render(); const vb=lastVB; const w=vb[2]*0.8;
+      Object.assign(photo,{w,x:vb[0]+vb[2]*0.1,y:vb[1]+(vb[3]-w*ratio)/2}); syncPhoto(); render();
+      toast('ใส่รูปแล้ว ต่อไปกด "เทียบสเกล"'); }; im.src=rd.result; };
+  rd.readAsDataURL(f); e.target.value=''; };
+$('phDel').onclick=()=>{ photo=null; calib=null; syncPhoto(); render(); };
+$('phOp').oninput=e=>{ photo.op=+e.target.value; $('phOpV').textContent=e.target.value+'%'; const im=document.getElementById('phImg'); if(im) im.setAttribute('opacity',photo.op/100); };
+$('phW').oninput=e=>{ const nw=+e.target.value, cx=photo.x+photo.w/2, cy=photo.y+photo.w*photo.ratio/2; photo.w=nw; photo.x=cx-nw/2; photo.y=cy-nw*photo.ratio/2; $('phWV').textContent=fmt(nw)+'″'; render(); };
+function calTarget(){ const t=state.type,p=state.params[t];
+  return T[t].cat==='top'? {a:[-p.C/2,p.AH+1],b:[p.C/2,p.AH+1],txt:`คลิกใต้รักแร้ซ้าย 1 นิ้ว แล้วใต้รักแร้ขวา 1 นิ้วในรูป ระบบจะย่อ/ขยายให้กว้างเท่าอก ${fmt(p.C)}″`}
+    : {a:[-p.W/2,0],b:[p.W/2,0],txt:`คลิกที่มุมขอบเอวซ้าย แล้วมุมขอบเอวขวาในรูป ระบบจะย่อ/ขยายให้กว้างเท่าเอว ${fmt(p.W)}″`}; }
+$('calBtn').onclick=()=>{ calib={pts:[]}; $('calHint').textContent=calTarget().txt; render(); };
+function syncPhoto(){ const on=!!photo; $('calBtn').classList.toggle('hide',!on); $('phDel').classList.toggle('hide',!on); $('phCtl').classList.toggle('hide',!on);
+  if(on){ $('phOp').value=photo.op; $('phOpV').textContent=photo.op+'%'; $('phW').value=photo.w; $('phWV').textContent=fmt(photo.w)+'″'; $('calHint').textContent=calib?calTarget().txt:''; } }
+function svgPt(ev){ const svg=stage.querySelector('svg'); const P=svg.createSVGPoint(); P.x=ev.clientX; P.y=ev.clientY; const q=P.matrixTransform(svg.getScreenCTM().inverse()); return [q.x,q.y]; }
+let drag=null;
+stage.addEventListener('pointerdown',ev=>{
+  if(state.mode!=='flat'||!photo) return;
+  const q=svgPt(ev);
+  if(calib){ calib.pts.push(q);
+    if(calib.pts.length===2){ const tg=calTarget(), [p1,p2]=calib.pts, dist=len(sub(p2,p1));
+      if(dist>0.2){ const k=len(sub(tg.b,tg.a))/dist, mid=lerp(p1,p2,0.5), tm=add(lerp(tg.a,tg.b,0.5),[lastFlatOffset,0]);
+        const u=[(mid[0]-photo.x)/photo.w,(mid[1]-photo.y)/photo.w]; photo.w*=k; photo.x=tm[0]-u[0]*photo.w; photo.y=tm[1]-u[1]*photo.w; }
+      calib=null; syncPhoto(); $('calHint').textContent='เทียบสเกลแล้ว ลากรูปเพื่อขยับละเอียด หรือกดเทียบใหม่ได้'; toast('ปรับขนาดรูปตามตัวเลขจริงแล้ว');
+    } else toast('คลิกจุดที่ 2');
+    render(); return; }
+  drag={start:q,x:photo.x,y:photo.y}; stage.setPointerCapture(ev.pointerId);
+});
+stage.addEventListener('pointermove',ev=>{ if(!drag) return; const q=svgPt(ev); photo.x=drag.x+q[0]-drag.start[0]; photo.y=drag.y+q[1]-drag.start[1];
+  const im=document.getElementById('phImg'); if(im){ im.setAttribute('x',fx(photo.x)); im.setAttribute('y',fx(photo.y)); } });
+stage.addEventListener('pointerup',()=>{ drag=null; });
+
+/* ---------- คลังทรง ---------- */
+function renderLib(){
+  if(!lib.length){ $('libList').innerHTML='<p class="empty">ยังไม่มีทรงในคลัง ลองบันทึกทรงแรก</p>'; return; }
+  $('libList').innerHTML=lib.map(x=>`<div class="lib-item"><div class="nm">${esc(x.name)}<small>${T[x.type]?T[x.type].name:x.type} · ${esc(x.date)}</small></div>
+    <button class="small" data-load="${x.id}">เปิด</button><button class="small" data-del="${x.id}">ลบ</button></div>`).join('');
+}
+$('libSave').onclick=()=>{
+  const t=state.type, name=$('libName').value.trim()||state.info[t].name||`${T[t].name} ${new Date().toLocaleDateString('th-TH')}`;
+  const ex=lib.find(x=>x.name===name);
+  if(ex && !armed($('libSave'),'ชื่อซ้ำ กดอีกครั้งเพื่อบันทึกทับ')) return;
+  const item={id:ex?ex.id:Date.now().toString(36),name,type:t,params:Object.assign({},state.params[t]),edited:Object.assign({},state.edited[t]),info:Object.assign({},state.info[t]),cons:Object.assign({},state.cons[t]),consSet:Object.assign({},state.consSet[t]),notes:state.notes[t]||'',date:new Date().toLocaleDateString('th-TH')};
+  if(ex) Object.assign(ex,item); else lib.unshift(item);
+  saveLib(); renderLib(); $('libName').value=''; toast('บันทึกลงคลังแล้ว');
+};
+$('libList').onclick=e=>{
+  const l=e.target.dataset.load, d=e.target.dataset.del;
+  if(l){ const x=lib.find(i=>i.id===l); state.type=x.type; Object.assign(state.params[x.type],x.params); state.edited[x.type]=Object.assign({},x.edited||{}); if(x.info) Object.assign(state.info[x.type],x.info); state.cons[x.type]=Object.assign(consDefaults(x.type),x.cons||{}); state.consSet[x.type]=Object.assign({},x.consSet||{}); state.notes[x.type]=x.notes||''; $('type').value=x.type; buildFields(); render(); toast('เปิด "'+x.name+'" แล้ว'); }
+  if(d){ if(armed(e.target,'กดอีกครั้งเพื่อลบ')){ lib=lib.filter(i=>i.id!==d); saveLib(); renderLib(); toast('ลบออกจากคลังแล้ว'); } }
+};
+$('libExport').onclick=()=>{ if(!lib.length) return toast('คลังยังว่าง'); download(new Blob([JSON.stringify(lib,null,2)],{type:'application/json'}),`NWL-Flat-Library-${new Date().toISOString().slice(0,10)}.json`); };
+$('libImportBtn').onclick=()=>$('libImport').click();
+$('libImport').onchange=e=>{ const f=e.target.files[0]; if(!f) return; f.text().then(s=>{ try{ const arr=JSON.parse(s); let n=0;
+    for(const it of arr){ if(!it||!T[it.type]||!it.params) continue; const ex=lib.find(x=>x.id===it.id); if(ex) Object.assign(ex,it); else lib.push(it); n++; }
+    saveLib(); renderLib(); toast(`นำเข้า ${n} ทรง`); }catch(err){ toast('อ่านไฟล์ไม่ได้'); } }); e.target.value=''; };
+
+/* ---------- ดาวน์โหลด ---------- */
+function download(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500); }
+function exportSvg(pxPerIn){ const r=state.mode==='flat'?flatInner(true):lookInner(true); return svgWrap(r.inner,r.vb,pxPerIn); }
+function fileBase(){ const t=state.type, nm=(state.info[t].name||'').replace(/[^\w\-ก-๙]+/g,'_').replace(/^_|_$/g,'');
+  return state.mode==='flat'?`NWL_Flat_${nm||t}_${state.info[t].ver||'v1'}`:`NWL_Lineup_${new Date().toISOString().slice(0,10)}`; }
+$('dlSvg').onclick=()=>download(new Blob([exportSvg(0)],{type:'image/svg+xml'}),fileBase()+'.svg');
+$('dlPng').onclick=()=>{
+  const s=exportSvg(40), m=s.match(/width="(\d+)" height="(\d+)"/), w=+m[1], h=+m[2];
+  const im=new Image(); im.onload=()=>{ const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(im,0,0,w,h);
+    c.toBlob(b=>{ if(b){ download(b,fileBase()+'.png'); toast(`ดาวน์โหลด PNG ${w}×${h} px`);} else toast('สร้าง PNG ไม่ได้ ลองดาวน์โหลด SVG แทน'); },'image/png'); };
+  im.onerror=()=>toast('สร้าง PNG ไม่ได้ ลองดาวน์โหลด SVG แทน');
+  im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);
+};
+function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('show'),2200); }
+
+/* ---------- เริ่ม ---------- */
+buildTypeSelect(); $('type').value=state.type; buildFields(); bindStyle(); renderLib(); setMode(state.mode);
+</script>
+</body>
+</html>
