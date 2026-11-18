@@ -88,8 +88,9 @@
 </head>
 <body>
 <div class="top">
-  <div class="brand">NWL STUDIO<span>Flat Sketch Maker · ต้นแบบ v5</span></div>
+  <div class="brand">NWL STUDIO<span>Flat Sketch Maker · ต้นแบบ v6</span></div>
   <div class="row">
+    <select id="pageMode" style="width:auto;padding:7px 10px;font-size:14px" title="ขนาดหน้าไฟล์ที่ดาวน์โหลด"><option value="a4">หน้ากระดาษ A4 แนวนอน</option><option value="fit">พอดีงาน (ไม่มีหน้ากระดาษ)</option></select>
     <label class="switch" style="margin:0"><input type="checkbox" id="transp"> PNG พื้นใส</label>
     <button id="dlSvg">ดาวน์โหลด SVG</button>
     <button class="primary" id="dlPng">ดาวน์โหลด PNG</button>
@@ -240,7 +241,43 @@
       </section>
 
       <section class="card">
-        <h2><span class="step">8</span>คลังทรง NWL</h2>
+        <h2><span class="step">8</span>ลายสกรีน · Print placement</h2>
+        <p class="hint" style="margin-top:0">ใส่ไฟล์ลาย PNG, JPG, SVG, PSD หรือ AI ลายจะขึ้นบนเสื้อตามขนาดจริง ใช้กำหนดตำแหน่งและขนาดส่งโรงสกรีน (ไม่ใช่ภาพเหมือนจริง ไม่มีรอยยับ และไม่ได้จำลองหมึก) ลายแยกตามชนิดสินค้า</p>
+        <div class="row" style="margin-top:10px"><button id="prAdd">เพิ่มลาย</button></div>
+        <input type="file" id="prFile" accept=".png,.jpg,.jpeg,.webp,.svg,.psd,.ai,.pdf,image/*,application/pdf" hidden>
+        <div id="prList" style="margin-top:10px"></div>
+        <div id="prEdit" class="hide">
+          <label class="f">ชื่อลาย</label><input type="text" id="prName">
+          <label class="f">ตำแหน่ง</label><select id="prPos"></select>
+          <div class="two">
+            <div><label class="f">กว้าง (นิ้ว)</label><input type="number" id="prW" step="0.25" min="0.5"></div>
+            <div><label class="f">สูง (นิ้ว)</label><input type="number" id="prH" step="0.25" min="0.5"></div>
+          </div>
+          <p class="hint" id="prSizeNote"></p>
+          <div class="two">
+            <div><label class="f" id="prYLab">ห่างจาก HPS ลงมา (นิ้ว)</label><input type="number" id="prY" step="0.25"></div>
+            <div><label class="f" id="prXLab">ห่างจากกลาง CF (นิ้ว)</label><input type="number" id="prX" step="0.25"></div>
+          </div>
+          <div class="rv"><span>หมุนลาย</span><b id="prRotV"></b></div>
+          <input type="range" id="prRot" min="-180" max="180" step="1">
+          <div class="rv"><span>ความทึบของหมึก</span><b id="prOpV"></b></div>
+          <input type="range" id="prOp" min="20" max="100" step="5">
+          <label class="f">สีลาย</label>
+          <div class="seg" id="prCm"><button data-v="orig">สีเดิม</button><button data-v="map">เปลี่ยนทีละสี</button><button data-v="tint">สีเดียวทั้งลาย</button></div>
+          <div id="prPal" style="margin-top:8px"></div>
+          <p class="hint" id="prCmNote"></p>
+          <label class="switch"><input type="checkbox" id="prMul"> หมึกซึมผ้า (เห็นสีและลายผ้าทะลุ แบบหมึกน้ำ)</label>
+          <label class="f">เทคนิคพิมพ์</label><select id="prTech"></select>
+          <label class="f">สีหมึก / จำนวนสี</label><input type="text" id="prInk" placeholder="เช่น 2 สี: ขาว, แดง Pantone 186 C">
+          <label class="switch"><input type="checkbox" id="prDrag" checked> ลากในภาพเพื่อย้ายลายที่กำลังแก้</label>
+        </div>
+        <label class="f">ขนาดบล็อกสกรีนใหญ่สุด (ซม.) กว้าง × สูง</label>
+        <div class="two"><input type="number" id="blkW" step="1" min="5"><input type="number" id="blkH" step="1" min="5"></div>
+        <p class="hint">ลายที่ใหญ่กว่าบล็อก ชิดคอ หรือเลยขอบเสื้อจะมีคำเตือน · ไฟล์ AI ต้องบันทึกแบบ "Create PDF Compatible File" (ค่าตั้งต้นของ Illustrator) และต้องต่อเน็ตตอนเปิดไฟล์ · PSD ต้องเป็น RGB 8-bit</p>
+      </section>
+
+      <section class="card">
+        <h2><span class="step">9</span>คลังทรง NWL</h2>
         <div class="row">
           <input type="text" id="libName" placeholder="ตั้งชื่อทรง เช่น Boxy Tee 2027" style="flex:1">
           <button id="libSave">บันทึกทรงนี้</button>
@@ -444,7 +481,7 @@ function defaults(){
   for(const t in T){ params[t]={ANG:T[t].ang||0}; edited[t]={}; cons[t]=consDefaults(t); consSet[t]={}; info[t]={name:'',ver:'v1',size:t==='hoodie'||t==='zip'?'L':''}; for(const f of allFields(t)) params[t][f[0]]=f[4]; }
   const body={edited:{}}; for(const b of BODY) body[b[0]]=b[3];
   return {mode:'flat',type:'zip',params,edited,info,body,cons,consSet,notes:{},
-    style:{line:'#111111',fill:'#ffffff',lw:0.05,dims:'pom',views:'both',stitch:true,shade:true,grid:true,bar:true,tblock:true,ghost:false,guides:false,ctags:true},
+    style:{line:'#111111',fill:'#ffffff',lw:0.05,dims:'pom',views:'both',stitch:true,shade:true,grid:true,bar:true,tblock:true,ghost:false,guides:false,ctags:true,page:'a4',block:{w:45,h:55}},
     looks:[{top:'cur:zip',bottom:'cur:jeans',drop:1},{top:'cur:tee',bottom:'cur:sweat',drop:1.5}], lookAngle:70};
 }
 function load(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; } }
@@ -586,6 +623,11 @@ function fray(pts,dir,S){ // ขอบขาดดิบ: ขีดสั้น�
     for(let k=0;k<m;k++){ const q=lerp(a,b,(k+0.5)/m), l=(k%3===0)?0.22:0.12; r+=`M${pt(sub(q,mul(dir,0.05)))} L${pt(add(q,mul(dir,l)))} `; } }
   return S.rib(r); }
 function ribBetween(S,a,b,n){ const A=bzSample(a,n), B=bzSample(b,n); let r=''; for(let i=1;i<n;i++) r+=`M${pt(A[i])} L${pt(B[i])} `; return S.rib(r); }
+
+/* พลิกซ้าย-ขวา (ใช้สร้างแขนซ้ายจากแขนขวา) · แก้เฉพาะพิกัดในเส้น d="..." เท่านั้น
+   เดิมไปพลิกค่าเส้นประ stroke-dasharray="a b" ด้วย ค่าเลยติดลบ เส้นประแขนซ้ายจึงกลายเป็นเส้นทึบ */
+const flipPairs=d=>d.replace(/(-?\d+\.?\d*) (-?\d+\.?\d*)/g,(m,x,y)=>fx(-x)+' '+y);
+const mirrorSvg=s=>s.includes('<')?s.replace(/ d="([^"]*)"/g,(m,d)=>' d="'+flipPairs(d)+'"'):flipPairs(s);
 
 /* ---------- เสื้อ ---------- */
 function buildTop(type,p,o,S){
@@ -763,12 +805,12 @@ function buildTop(type,p,o,S){
   // ตะเข็บวงแขน (ฝั่งตัวเสื้อ)
   const nA=nRows(K.s_arm);
   if(nA){ const arm=q=>{ const s=[-q,0]; return `M${pt(add(sh,[-q,0.1]))} C${pt(add(c1,s))} ${pt(add(c2,s))} ${pt(add(U,s))}`; };
-    let a=rows(nA,arm,0.15,gap); det+=a+a.replace(/(-?\d+\.?\d*) (-?\d+\.?\d*)/g,(m,x,y)=>fx(-x)+' '+y); }
+    let a=rows(nA,arm,0.15,gap); det+=a+mirrorSvg(a); }
   anchors.s_arm=[(sh[0]+U[0])/2-1.3,(sh[1]+U[1])/2];
 
   // แขนเสื้อ
   const sleeveR=`M${pt(sh)} L${pt(A)} L${pt(B)} L${pt(Us)} C${pt(rc2)} ${pt(rc1)} ${pt(sh)}Z`;
-  const M=s=>s.replace(/(-?\d+\.?\d*) (-?\d+\.?\d*)/g,(m,x,y)=>fx(-x)+' '+y);
+  const M=mirrorSvg;
   let sdet='';
   const nS=nRows(hood?K.s_hem:K.s_slv);
   if(CF>0){
@@ -799,7 +841,7 @@ function buildTop(type,p,o,S){
   const extra=(!o.look&&!back&&o.dims!=='off')?1.6:0;
   const ys=[hood?-(o.look?p.HH*0.45:p.HH):(ns==='mock'?-MH-0.5:-1), L+(hs==='drop'?HS:0)+(extra?2.2:0.5), A[1],B[1]];
   const xs=[Math.abs(A[0])+extra,Math.abs(B[0])+extra,C/2,H/2,Sh/2,hood?p.HW/2:0];
-  return {behind, main:torso+det+front+sleeves, dims, anchors, bounds:{x:Math.max(...xs), y0:Math.min(...ys), y1:Math.max(...ys)}};
+  return {behind, main:torso+det+front+sleeves, dims, anchors, clips:[dT,sleeveR,M(sleeveR)], bounds:{x:Math.max(...xs), y0:Math.min(...ys), y1:Math.max(...ys)}};
 }
 
 /* ---------- กางเกง ---------- */
@@ -905,7 +947,7 @@ function buildBottom(type,p,o,S){
     const g=[gR,gL,wb,cr];
     depth=S.clipShade(d,`<defs>${g.map(x=>x.def).join('')}</defs><rect x="0" y="${fx(WB)}" width="300" height="300" fill="url(#${gR.id})"/><rect x="-300" y="${fx(WB)}" width="300" height="300" fill="url(#${gL.id})"/><rect ${BIG} fill="url(#${wb.id})"/><rect ${BIG} fill="url(#${cr.id})"/>`);
   }
-  return {main:S.shape(d)+depth+det, dims, anchors, R, yH, ch, O,
+  return {main:S.shape(d)+depth+det, dims, anchors, clips:[d], R, yH, ch, O, ct,
     bounds:{x:Math.max(W/2,Hp/2,xo,ch+O/2,ck+Kn/2)+ext, y0:-0.4-(ext>1?1.8:0), y1:yH+ext}};
 }
 
@@ -946,6 +988,23 @@ function svgWrap(inner,vb,forExport){
   const bg=forExport&&!document.getElementById('transp').checked?`<rect x="${fx(x)}" y="${fx(y)}" width="${fx(w)}" height="${fx(h)}" fill="#ffffff"/>`:'';
   const size=forExport?` width="${Math.round(w*forExport)}" height="${Math.round(h*forExport)}"`:'';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${fx(x)} ${fx(y)} ${fx(w)} ${fx(h)}"${size} preserveAspectRatio="xMidYMid meet" font-family="Helvetica Neue, Arial, Thonburi, sans-serif">${bg}${g}${inner}</svg>`;
+}
+/* หน้ากระดาษ A4 แนวนอน (297 × 210 มม.) · ย่องานทั้งหมดให้พอดีหน้า แล้วบอกมาตราส่วนไว้มุมขวาล่าง
+   opt: {preview:true} = แสดงในหน้าจอ, {px:300} = PNG 300 dpi, {px:0} = SVG ขนาดกระดาษจริง */
+const A4={w:11.693,h:8.268,m:0.35};
+function pageSvg(inner,vb,opt){
+  const [x,y,w,h]=vb, P=A4, aw=P.w-2*P.m, ah=P.h-2*P.m-0.2, k=Math.min(aw/w,ah/h);
+  const iw=w*k, ih=h*k, ox=(P.w-iw)/2, oy=P.m+(ah-ih)/2, ratio=1/k;
+  const grid=opt.preview&&state.style.grid?`<defs><pattern id="gr" width="1" height="1" patternUnits="userSpaceOnUse"><path d="M1 0 L0 0 0 1" fill="none" stroke="#ecebe7" stroke-width="0.03"/></pattern></defs><rect x="${fx(x)}" y="${fx(y)}" width="${fx(w)}" height="${fx(h)}" fill="url(#gr)"/>`:'';
+  const transp=!opt.preview&&document.getElementById('transp').checked;
+  const size=opt.preview?'':(opt.px?` width="${Math.round(P.w*opt.px)}" height="${Math.round(P.h*opt.px)}"`:` width="297mm" height="210mm"`);
+  const vbox=opt.preview?`-0.25 -0.25 ${fx(P.w+0.5)} ${fx(P.h+0.5)}`:`0 0 ${fx(P.w)} ${fx(P.h)}`;
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vbox}"${size} preserveAspectRatio="xMidYMid meet" font-family="Helvetica Neue, Arial, Thonburi, sans-serif">`;
+  if(opt.preview) s+=`<rect x="-0.25" y="-0.25" width="${fx(P.w+0.5)}" height="${fx(P.h+0.5)}" fill="#e9e7e2"/><rect x="0.03" y="0.04" width="${fx(P.w)}" height="${fx(P.h)}" fill="#000" opacity=".08"/>`;
+  if(!transp) s+=`<rect width="${fx(P.w)}" height="${fx(P.h)}" fill="#ffffff"/>`;
+  s+=`<svg x="${fx(ox)}" y="${fx(oy)}" width="${fx(iw)}" height="${fx(ih)}" viewBox="${fx(x)} ${fx(y)} ${fx(w)} ${fx(h)}" overflow="visible">${grid}${inner}</svg>`;
+  s+=`<text x="${fx(P.w-P.m)}" y="${fx(P.h-P.m*0.55)}" text-anchor="end" font-size="0.1" fill="#6e6c68">A4 แนวนอน · มาตราส่วน 1:${ratio.toFixed(1)} (พิมพ์ 100% แล้ว 1 นิ้วบนกระดาษ = ${ratio.toFixed(1)} นิ้วของจริง)</text>`;
+  return s+`</svg>`;
 }
 /* ---------- ผ้าจริง ---------- */
 function fabOf(t){ const f=fabrics[t]; return f&&f.src?f:null; }
@@ -1045,6 +1104,7 @@ function flatInner(forExport){
       if(fig) for(const yy of [fig.yw,fig.yhip,fig.yc]) g+=`<path d="M${fx(-half)} ${fx(yy+figOff)} L${fx(half)} ${fx(yy+figOff)}" stroke="#2b6cb0" stroke-width="0.025" stroke-dasharray="0.3 0.15" opacity=".45"/>`;
     }
     g+=(r.behind||'')+r.main+r.dims;
+    g+=printsLayer(t,p,v,r,{dims:st.dims!=='off',preview:!forExport});
     if(st.ctags) for(const k in r.anchors){ if(!nums[k]) continue; if(k.startsWith('s_')&&!nRows(K[k])) continue; if(K[k]===false) continue; g+=ctag(r.anchors[k][0],r.anchors[k][1],nums[k]); }
     g+=`<text x="0" y="${fx(y1+1.0)}" text-anchor="middle" font-size="0.6" font-weight="700" letter-spacing="0.08" fill="#111">${v==='front'?'FRONT · ด้านหน้า':'BACK · ด้านหลัง'}</text>`;
     inner+=`<g transform="translate(${fx(offs[i])} 0)">${g}</g>`;
@@ -1054,6 +1114,7 @@ function flatInner(forExport){
   let colY=y0+0.6, colW=0;
   if(st.dims==='pom'){ const tb=pomTable(xR+0.5,colY,t,p,info.size); inner+=tb.svg; colY+=tb.h+1.3; colW=tb.w; }
   if(st.ctags){ const tb=consTable(xR+0.5,colY,t,K,state.consSet[t],p); inner+=tb.svg; colY+=tb.h+1; colW=Math.max(colW,tb.w); }
+  { const tb=printTable(xR+0.5,colY,t,p); if(tb){ inner+=tb.svg; colY+=tb.h+1; colW=Math.max(colW,tb.w); } }
   if(colW){ xR+=colW+1.5; y1=Math.max(y1,colY); yB=Math.max(yB,y1+2); }
   if(st.bar){ inner+=scaleBar(xL+0.5,yB+0.6); yB+=1.4; }
   if(fab){ const b=fabBand(xL,yB+0.2,xR-xL,[{f:fab,id:fid}]); inner+=b.svg; yB+=b.h+0.2; }
@@ -1082,7 +1143,7 @@ function lookOne(look,S,fig,used){
           for(let i=1;i<=4;i++){ const x0=a+(b-a)*(i-0.5)/4, x1=a+(b-a)*i/4; dd+=` Q${fx(x0)} ${fx(y+(i%2?0.35:-0.35))} ${fx(x1)} ${fx(y)}`; }
           fold+=S.ln(dd,0.5); } } }
     const cid='fl'+Math.random().toString(36).slice(2,7);
-    inner+=`<defs><clipPath id="${cid}"><rect x="-200" y="-200" width="400" height="${fx(200+floor)}"/></clipPath></defs><g clip-path="url(#${cid})"><g transform="translate(0 ${fx(pantsY)})">${r.main}</g></g>${fold}`;
+    inner+=`<defs><clipPath id="${cid}"><rect x="-200" y="-200" width="400" height="${fx(200+floor)}"/></clipPath></defs><g clip-path="url(#${cid})"><g transform="translate(0 ${fx(pantsY)})">${r.main}${look.bottom.startsWith('cur:')?printsLayer(bot.type,bot.params,'front',r,{look:true}):''}</g></g>${fold}`;
     maxX=Math.max(maxX,r.bounds.x);
     guides.push([pantsY,'ขอบเอวกางเกง'],[pantsY+r.R,'เป้ากางเกง'],[Math.min(pantsY+r.yH,floor),'ปลายขา']);
     if(excess>0.3) sum.push(`ขากางเกงยาวเกินพื้น <b>${fmt(excess)}″</b> จะกองที่ข้อเท้า/รองเท้า`);
@@ -1091,7 +1152,7 @@ function lookOne(look,S,fig,used){
   }
   if(top){
     const r=buildTop(top.type,top.params,{look:true,lookAngle:+state.lookAngle,cons:top.cons},Sof(look.top,top));
-    inner=`<g transform="translate(0 ${fx(fig.yn)})">${r.behind}</g>`+inner+`<g transform="translate(0 ${fx(fig.yn)})">${r.main}</g>`;
+    inner=`<g transform="translate(0 ${fx(fig.yn)})">${r.behind}</g>`+inner+`<g transform="translate(0 ${fx(fig.yn)})">${r.main}${look.top.startsWith('cur:')?printsLayer(top.type,top.params,'front',r,{look:true,lookAngle:+state.lookAngle}):''}</g>`;
     maxX=Math.max(maxX,r.bounds.x); minY=Math.min(minY,fig.yn+r.bounds.y0-1);
     const hem=fig.yn+top.params.L; guides.push([hem,'ชายเสื้อ']);
     if(bb){ const dW=hem-pantsY, dC=hem-(pantsY+bb.R);
@@ -1118,7 +1179,7 @@ function lookInner(forExport){
   let yB=fig.floor+2.4;
   if(state.style.bar){ inner+=scaleBar(xL+0.5,yB+0.4); yB+=1.2; }
   const ft=Object.keys(used);
-  if(ft.length){ const b=fabBand(xL,yB+0.2,xR-xL,ft.map(t=>({f:used[t],id:'fab_'+t,label:T[t].name}))); inner+=b.svg; yB+=b.h+0.2; }
+  if(ft.length){ const b=fabBand(xL,yB+0.2,xR-xL,ft.map(t=>({f:used[t].f,id:'fab_'+t,label:T[t].name}))); inner+=b.svg; yB+=b.h+0.2; }
   if(state.style.tblock){ const b=state.body;
     const tb=titleBlock(xL,yB+0.2,xR-xL,[['NWL STUDIO','LINE-UP'],['จำนวนลุค',String(res.length)],['หุ่น / Fit model',`${fmt(+b.height)} ซม. · อก ${fmt(+b.chest)} · เอว ${fmt(+b.waist)}`],['วันที่ / หน่วย',new Date().toLocaleDateString('th-TH')+' · นิ้ว']]);
     inner+=tb.svg; yB+=tb.h+0.4; }
@@ -1132,7 +1193,7 @@ function render(){
   if(state.mode==='flat'){ r=flatInner(false); }
   else { r=lookInner(false); document.getElementById('lkSum').innerHTML=r.sumHtml; }
   lastVB=r.vb;
-  stage.innerHTML=svgWrap(r.inner,r.vb,0);
+  stage.innerHTML=state.style.page==='a4'?pageSvg(r.inner,r.vb,{preview:true}):svgWrap(r.inner,r.vb,0);
   const t=state.type;
   document.getElementById('pvInfo').textContent = state.mode==='flat' ? `${T[t].name} · มาตราส่วนจริง (1 ช่อง = 1 นิ้ว)` : `ไลน์อัป ${state.looks.length} ลุค · มาตราส่วนเดียวกันทุกชิ้น`;
   document.getElementById('pvWarn').textContent = state.mode==='flat'?checkWarn():bodyWarn();
@@ -1140,6 +1201,8 @@ function render(){
   save();
 }
 function checkWarn(){
+  const pw=printsOf(state.type).map((pr,i)=>printWarn(state.type,state.params[state.type],pr).length?`P${i+1}`:null).filter(Boolean);
+  if(pw.length) return `ลาย ${pw.join(', ')} มีคำเตือน (ดูตาราง PRINT SPEC)`;
   const t=state.type, p=state.params[t], n=allFields(t).filter(f=>!state.edited[t][f[0]]&&f[5]==='s').length;
   if(T[t].cat==='top'){ if(p.H>p.C*1.35) return 'ชายเสื้อกว้างกว่าอกมาก ลองเช็กตัวเลขอีกครั้ง'; if(p.SO>p.AH*1.1) return 'ปลายแขนกว้างกว่าวงแขน ลองเช็กตัวเลข'; }
   else { if(p.W>p.Hp) return 'เอวกว้างกว่าสะโพก ลองเช็กตัวเลข'; if(p.O>p.T) return 'ปลายขากว้างกว่าต้นขา (ทรงขาบาน) ถ้าไม่ใช่ ลองเช็กตัวเลข'; }
@@ -1161,7 +1224,7 @@ function buildFields(){
   $('angBox').classList.toggle('hide',T[t].cat!=='top');
   $('ang').value=p.ANG; $('angV').textContent=p.ANG+'°';
   const inf=state.info[t]; $('infName').value=inf.name; $('infVer').value=inf.ver; $('infSize').value=inf.size;
-  buildCons(); syncFab();
+  buildCons(); buildPrints(); syncFab();
 }
 
 /* ---------- ผ้าจริง: แผงควบคุม ---------- */
@@ -1380,7 +1443,8 @@ function calTarget(){ const t=state.type,p=state.params[t];
 $('calBtn').onclick=()=>{ calib={pts:[]}; $('calHint').textContent=calTarget().txt; render(); };
 function syncPhoto(){ const on=!!photo; $('calBtn').classList.toggle('hide',!on); $('phDel').classList.toggle('hide',!on); $('phCtl').classList.toggle('hide',!on);
   if(on){ $('phOp').value=photo.op; $('phOpV').textContent=photo.op+'%'; $('phW').value=photo.w; $('phWV').textContent=fmt(photo.w)+'″'; $('calHint').textContent=calib?calTarget().txt:''; } }
-function svgPt(ev){ const svg=stage.querySelector('svg'); const P=svg.createSVGPoint(); P.x=ev.clientX; P.y=ev.clientY; const q=P.matrixTransform(svg.getScreenCTM().inverse()); return [q.x,q.y]; }
+/* หน้า A4 มี svg ซ้อน ใช้ตัวในเพื่อให้พิกัดเป็นนิ้วของงาน */
+function svgPt(ev){ const svg=stage.querySelector('svg svg')||stage.querySelector('svg'); const P=svg.createSVGPoint(); P.x=ev.clientX; P.y=ev.clientY; const q=P.matrixTransform(svg.getScreenCTM().inverse()); return [q.x,q.y]; }
 let drag=null;
 stage.addEventListener('pointerdown',ev=>{
   if(state.mode!=='flat'||!photo) return;
@@ -1397,6 +1461,289 @@ stage.addEventListener('pointerdown',ev=>{
 stage.addEventListener('pointermove',ev=>{ if(!drag) return; const q=svgPt(ev); photo.x=drag.x+q[0]-drag.start[0]; photo.y=drag.y+q[1]-drag.start[1];
   const im=document.getElementById('phImg'); if(im){ im.setAttribute('x',fx(photo.x)); im.setAttribute('y',fx(photo.y)); } });
 stage.addEventListener('pointerup',()=>{ drag=null; });
+
+/* ---------- ลายสกรีน (Print placement) ----------
+   prints[ชนิดสินค้า] = [{id,name,src,ratio,w,fileW,pos,x,y,rot,op,mul,tech,ink}]
+   ตำแหน่งลายตัวเสื้อ: x = ห่างจากกลาง CF (+ = ขวาของภาพ), y = ห่างจาก HPS ถึงขอบบนลาย (กางเกง = จากขอบเอว)
+   ลายแขน: y = ห่างจากตะเข็บไหล่ตามแนวแขน, x = เลื่อนขวางแขน */
+const LSPR='nwl-flat-prints-v1', PCOL='#1c7ed6';
+let prints=load(LSPR)||{}, printSel=null;
+function savePrints(){ try{ localStorage.setItem(LSPR,JSON.stringify(prints,(k,v)=>k==='_rc'?undefined:v)); return true; }catch(e){ return (e&&(e.name==='QuotaExceededError'||e.code===22))?'quota':'blocked'; } }
+function printsOf(t){ return prints[t]||(prints[t]=[]); }
+const PRINT_POS={
+  top:[['cchest','กลางอก','front'],['lchest','อกซ้าย (ซ้ายผู้สวม)','front'],['full','เต็มหน้า','front'],['upback','หลังบน (ใต้คอ)','back'],['fullback','เต็มหลัง','back'],
+       ['slvL','แขนซ้าย (ผู้สวม)','front'],['slvR','แขนขวา (ผู้สวม)','front'],['custF','กำหนดเอง · ด้านหน้า','front'],['custB','กำหนดเอง · ด้านหลัง','back']],
+  bottom:[['legL','ต้นขาซ้าย (ผู้สวม) · ด้านหน้า','front'],['legR','ต้นขาขวา (ผู้สวม) · ด้านหน้า','front'],['hipB','สะโพกหลัง','back'],['custF','กำหนดเอง · ด้านหน้า','front'],['custB','กำหนดเอง · ด้านหลัง','back']]};
+const PR_TECH=['','สกรีนหมึกยาง (Plastisol)','สกรีนหมึกน้ำ (Water-based)','ดิสชาร์จ (Discharge)','DTF','DTG','ปัก (Embroidery)','อื่นๆ (ระบุในหมายเหตุ)'];
+function posInfo(t,pos){ const L=PRINT_POS[T[t].cat]; return L.find(x=>x[0]===pos)||L[0]; }
+function presetPlace(t,p,pos){ // ตำแหน่งเริ่มต้น ปรับต่อได้ทุกค่า
+  if(T[t].cat==='top'){ const nd=p.ND||3;
+    switch(pos){
+      case 'cchest': return {x:0,y:nd+2.5,w:Math.min(10,p.C*0.45)};
+      case 'lchest': return {x:p.C*0.2,y:nd+2,w:3.5};
+      case 'full': return {x:0,y:nd+2,w:Math.min(12,p.C-5)};
+      case 'upback': return {x:0,y:2.5,w:Math.min(9,p.C*0.4)};
+      case 'fullback': return {x:0,y:4,w:Math.min(12,p.C-5)};
+      case 'slvL': case 'slvR': return {x:0,y:1.5,w:2.5};
+      default: return {x:0,y:nd+2.5,w:8}; } }
+  const xo=Math.max(p.Hp/2,0.85*p.T+0.3), ct=xo-0.85*p.T/2;
+  switch(pos){
+    case 'legL': return {x:ct,y:p.R+2,w:3};
+    case 'legR': return {x:-ct,y:p.R+2,w:3};
+    case 'hipB': return {x:-p.Hp/4,y:p.WB+5,w:3.5};
+    default: return {x:0,y:p.R*0.4,w:4}; }
+}
+function printGeom(t,p,pr,o){ // ตำแหน่งกึ่งกลางลาย + มุม (หน่วยนิ้ว ในพิกัดของทรง)
+  const w=+pr.w, h=w*pr.ratio;
+  if(T[t].cat==='top'&&(pr.pos==='slvL'||pr.pos==='slvR')){
+    const th=p.ANG*Math.PI/180, sh=[p.S/2,p.SS], U=[p.C/2,p.AH], dS=[Math.cos(th),Math.sin(th)], perp=[-dS[1],dS[0]];
+    let c=add(add(lerp(sh,U,0.5),mul(dS,(+pr.y||0)+h/2)),mul(perp,+pr.x||0)), ang=p.ANG-90+(+pr.rot||0);
+    if(o&&o.look){ const rd=o.lookAngle-p.ANG; c=rot(c,sh,rd); ang+=rd; }
+    if(pr.pos==='slvR'){ c=mx(c); ang=-ang; }
+    return {cx:c[0],cy:c[1],ang,w,h,kind:'sleeve',dS,perp};
+  }
+  return {cx:+pr.x||0,cy:(+pr.y||0)+h/2,ang:+pr.rot||0,w,h,kind:'torso'};
+}
+const cm=v=>(Math.round(v*2.54*10)/10).toString();
+function printWarn(t,p,pr){
+  const w=+pr.w, h=w*pr.ratio, out=[], b=state.style.block||{w:45,h:55};
+  if(w>b.w/2.54+0.01||h>b.h/2.54+0.01) out.push(`ใหญ่กว่าบล็อกสกรีน ${b.w}×${b.h} ซม.`);
+  if(T[t].cat==='top'){
+    if(pr.pos==='slvL'||pr.pos==='slvR'){ if(w>p.AH*0.85) out.push('กว้างเกินหน้าแขน'); if((+pr.y)+h>p.SL-0.4) out.push('เลยปลายแขน'); }
+    else { const x=+pr.x, y=+pr.y, back=posInfo(t,pr.pos)[2]==='back';
+      if(Math.abs(x)+w/2>p.C/2-0.25) out.push('เลยตะเข็บข้าง/แขน');
+      if(Math.abs(x)-w/2<p.NW/2+0.5&&y<(back?1:(p.ND||3)+0.75)) out.push(back?'ชิดคอหลัง':'ชิดหรือทับคอ');
+      if(y+h>p.L-(t==='tee'?1.2:(p.RB||1))-0.25) out.push('ทับชาย/จั๊มชาย'); }
+  }
+  return out;
+}
+const ptag=(x,y,n)=>`<rect x="${fx(x-0.38)}" y="${fx(y-0.27)}" width="0.76" height="0.54" rx="0.12" fill="${PCOL}"/><text x="${fx(x)}" y="${fx(y+0.15)}" text-anchor="middle" font-size="0.36" font-weight="700" fill="#fff">P${n}</text>`;
+function printsLayer(t,p,view,r,o){
+  const all=printsOf(t), list=all.filter(pr=>posInfo(t,pr.pos)[2]===view); if(!list.length) return '';
+  const cid=uid(); let s=`<defs><clipPath id="${cid}">${r.clips.map(d=>`<path d="${d}"/>`).join('')}</clipPath></defs><g clip-path="url(#${cid})">`;
+  for(const pr of list){ const g=printGeom(t,p,pr,o);
+    s+=`<g transform="translate(${fx(g.cx)} ${fx(g.cy)}) rotate(${fx(g.ang)})"><image href="${pr._rc||pr.src}" x="${fx(-g.w/2)}" y="${fx(-g.h/2)}" width="${fx(g.w)}" height="${fx(g.h)}" preserveAspectRatio="none" opacity="${fx((pr.op==null?100:+pr.op)/100)}"${pr.mul?' style="mix-blend-mode:multiply"':''}/></g>`; }
+  s+='</g>';
+  if(o.look) return s;
+  const top=T[t].cat==='top', pd=(a,b,lab,off)=>dimLine(a,b,lab,off,'inline').split(DIM).join(PCOL);
+  for(const pr of list){ const g=printGeom(t,p,pr,o), n=all.indexOf(pr)+1;
+    const Lx=g.cx-g.w/2, Rx=g.cx+g.w/2, Ty=g.cy-g.h/2, By=g.cy+g.h/2;
+    if(o.dims&&g.kind==='torso'&&!g.ang){
+      s+=pd([Lx-0.7,0],[Lx-0.7,Ty],`P${n} ห่าง${top?' HPS':'ขอบเอว'} ${fmt(Ty)}″`);
+      s+=pd([Lx,Ty],[Rx,Ty],`กว้าง ${fmt(g.w)}″`,[0,-0.55]);
+      s+=pd([Rx,Ty],[Rx,By],`สูง ${fmt(g.h)}″`,[0.55,0]);
+      if(Math.abs(g.cx)>0.05) s+=pd([0,By+0.6],[g.cx,By+0.6],`ห่าง CF ${fmt(Math.abs(g.cx))}″`);
+    }
+    if(o.preview&&pr.id===printSel) s+=`<g transform="translate(${fx(g.cx)} ${fx(g.cy)}) rotate(${fx(g.ang)})"><rect x="${fx(-g.w/2)}" y="${fx(-g.h/2)}" width="${fx(g.w)}" height="${fx(g.h)}" fill="none" stroke="${PCOL}" stroke-width="0.05" stroke-dasharray="0.25 0.15"/></g>`;
+    s+=ptag(g.kind==='torso'?Lx+0.45:g.cx, g.kind==='torso'?Ty+0.35:g.cy, n);
+  }
+  return s;
+}
+function printTable(x,y,t,p){
+  const list=printsOf(t); if(!list.length) return null;
+  const w=19, rh=1.35, tbc=`<tspan fill="${DIM}">[TBC]</tspan>`;
+  let s=`<text x="${fx(x)}" y="${fx(y)}" font-size="0.5" font-weight="700" fill="#111">PRINT SPEC · ลายสกรีน (นิ้ว)</text>`;
+  list.forEach((pr,i)=>{ const yy=y+0.6+i*rh, h=pr.w*pr.ratio, pi=posInfo(t,pr.pos), sl=pr.pos.startsWith('slv'), warn=printWarn(t,p,pr), back=pi[2]==='back';
+    const xs=Math.abs(+pr.x)<0.05?'กึ่งกลาง CF':`ห่าง CF ${fmt(Math.abs(+pr.x))}″ ${(+pr.x>0)!==back?'(ซ้ายผู้สวม)':'(ขวาผู้สวม)'}`;
+    const ps=sl?`ห่างตะเข็บไหล่ ${fmt(+pr.y)}″ ตามแนวแขน`:`ห่าง${T[t].cat==='top'?' HPS':'ขอบเอว'} ${fmt(+pr.y)}″ · ${xs}`;
+    s+=`<rect x="${fx(x)}" y="${fx(yy)}" width="${w}" height="${rh}" fill="${i%2?'#fff':'#f3f8fe'}"/>`+ptag(x+0.5,yy+rh/2,i+1);
+    s+=`<text x="${fx(x+1.1)}" y="${fx(yy+0.55)}" font-size="0.42" font-weight="700" fill="#111">${esc(pr.name)} · ${esc(pi[1])} · ${fmt(pr.w)}″ × ${fmt(h)}″ (${cm(pr.w)} × ${cm(h)} ซม.)${pr.rot?` · หมุน ${pr.rot}°`:''}</text>`;
+    s+=`<text x="${fx(x+1.1)}" y="${fx(yy+1.1)}" font-size="0.36" fill="#6e6c68">${esc(ps)} · เทคนิค: ${pr.tech?esc(pr.tech):tbc} · สี: ${pr.ink?esc(pr.ink):tbc+inkHint(pr)}${warn.length?`<tspan fill="${DIM}" font-weight="700"> · ⚠ ${esc(warn.join(', '))}</tspan>`:''}</text>`; });
+  s+=`<path d="M${fx(x)} ${fx(y+0.6+list.length*rh)} L${fx(x+w)} ${fx(y+0.6+list.length*rh)}" stroke="#111" stroke-width="0.03"/>`;
+  return {svg:s,w,h:0.6+list.length*rh};
+}
+
+/* ---------- อ่านไฟล์ลาย: PNG / JPG / WebP / SVG / PSD / AI / PDF ---------- */
+function pngDPI(buf){ const v=new DataView(buf); if(v.byteLength<16||v.getUint32(0)!==0x89504e47) return null; let o=8;
+  while(o+8<=v.byteLength){ const len=v.getUint32(o), type=String.fromCharCode(v.getUint8(o+4),v.getUint8(o+5),v.getUint8(o+6),v.getUint8(o+7));
+    if(type==='pHYs'&&v.getUint8(o+16)===1) return Math.round(v.getUint32(o+8)*0.0254*100)/100;
+    if(type==='IDAT'||type==='IEND') break; o+=12+len; } return null; }
+function jpgDPI(buf){ const b=new Uint8Array(buf); for(let i=2;i<Math.min(b.length-16,4000);i++){
+    if(b[i]===0x4A&&b[i+1]===0x46&&b[i+2]===0x49&&b[i+3]===0x46&&b[i+4]===0){ const u=b[i+7], d=(b[i+8]<<8)|b[i+9]; return u===1?d:u===2?d*2.54:null; } } return null; }
+function svgSizeIn(txt){ const m=txt.match(/<svg[^>]*>/i); if(!m) return null; const tag=m[0];
+  const at=n=>{ const r=tag.match(new RegExp('\\s'+n+'="([\\d.]+)(in|mm|cm|pt|px)?"','i')); if(!r) return null; const v=+r[1], u=(r[2]||'px').toLowerCase();
+    return u==='in'?v:u==='mm'?v/25.4:u==='cm'?v/2.54:u==='pt'?v/72:v/96; };
+  const w=at('width'), h=at('height'); return w&&h?{w,h,px:!/(in|mm|cm|pt)"/i.test(tag)}:null; }
+function decodePSD(buf){ // อ่านภาพรวม (composite) ของ PSD แบบ RGB 8-bit
+  const v=new DataView(buf), u8=o=>v.getUint8(o), u16=o=>v.getUint16(o), u32=o=>v.getUint32(o);
+  if(u32(0)!==0x38425053) throw new Error('ไม่ใช่ไฟล์ PSD');
+  if(u16(4)!==1) throw new Error('ไฟล์ใหญ่แบบ PSB ยังเปิดไม่ได้ ให้ Export เป็น PNG');
+  const ch=u16(12), h=u32(14), w=u32(18), depth=u16(22), mode=u16(24);
+  if(depth!==8||mode!==3) throw new Error('PSD ต้องเป็น RGB 8-bit (Image › Mode › RGB Color / 8 Bits) หรือ Export เป็น PNG');
+  let o=26; o+=4+u32(o);
+  const rl=u32(o); let r=o+4; const rEnd=r+rl; let dpi=null;
+  while(r+12<=rEnd){ const id=u16(r+4); let nl=1+u8(r+6); if(nl%2) nl++; const sz=u32(r+6+nl), ds=r+6+nl+4;
+    if(id===0x03ED){ const hr=u32(ds)/65536, unit=u16(ds+4); dpi=unit===2?hr*2.54:hr; } r=ds+sz+(sz%2); }
+  o=rEnd; o+=4+u32(o);
+  const comp=u16(o); o+=2; const n=w*h, chans=[], use=Math.min(ch,4);
+  if(comp===0){ for(let c=0;c<use;c++) chans.push(new Uint8Array(buf,o+c*n,n)); }
+  else if(comp===1){ const cnt=[]; for(let i=0;i<ch*h;i++) cnt.push(u16(o+i*2)); let p=o+ch*h*2;
+    for(let c=0;c<use;c++){ const out=new Uint8Array(n); let q=0;
+      for(let row=0;row<h;row++){ const end=p+cnt[c*h+row]; while(p<end){ let b=u8(p++); if(b>127) b-=256;
+        if(b>=0){ for(let k=0;k<=b;k++) out[q++]=u8(p++); } else if(b!==-128){ const val=u8(p++); for(let k=0;k<1-b;k++) out[q++]=val; } } }
+      chans.push(out); } }
+  else throw new Error('PSD แบบบีบอัดนี้ยังเปิดไม่ได้ ให้ Export เป็น PNG');
+  const cv=document.createElement('canvas'); cv.width=w; cv.height=h; const g=cv.getContext('2d'), im=g.createImageData(w,h), d=im.data;
+  for(let i=0;i<n;i++){ const a=use>=4?chans[3][i]:255; let R=chans[0][i],G=chans[1][i],B=chans[2][i];
+    if(a>0&&a<255){ const k=255/a; R=Math.max(0,Math.min(255,(R-(255-a))*k)); G=Math.max(0,Math.min(255,(G-(255-a))*k)); B=Math.max(0,Math.min(255,(B-(255-a))*k)); } // เอาพื้นขาวที่ผสมไว้ออก
+    d[i*4]=R; d[i*4+1]=G; d[i*4+2]=B; d[i*4+3]=a; }
+  g.putImageData(im,0,0); return {canvas:cv,dpi};
+}
+const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+async function loadPdfJs(){
+  if(window.pdfjsLib) return window.pdfjsLib;
+  await new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=PDFJS+'pdf.min.js'; s.onload=res; s.onerror=()=>rej(new Error('โหลดตัวอ่านไฟล์ AI ไม่ได้ ต้องต่ออินเทอร์เน็ต หรือ Export เป็น PNG')); document.head.appendChild(s); });
+  const lib=window.pdfjsLib;
+  try{ const code=await fetch(PDFJS+'pdf.worker.min.js').then(r=>r.text()); lib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([code],{type:'text/javascript'})); }
+  catch(e){ lib.GlobalWorkerOptions.workerSrc=PDFJS+'pdf.worker.min.js'; }
+  return lib;
+}
+async function renderPDF(buf){
+  const head=new TextDecoder().decode(new Uint8Array(buf,0,Math.min(1024,buf.byteLength)));
+  if(!head.includes('%PDF')) throw new Error('ไฟล์ AI นี้ไม่ได้บันทึกแบบ PDF Compatible ให้ Save As ติ๊ก "Create PDF Compatible File" หรือ Export เป็น PNG');
+  const lib=await loadPdfJs(), doc=await lib.getDocument({data:new Uint8Array(buf.slice(0))}).promise, page=await doc.getPage(1);
+  const v1=page.getViewport({scale:1}), sc=Math.min(6,2400/Math.max(v1.width,v1.height)), vp=page.getViewport({scale:sc});
+  const cv=document.createElement('canvas'); cv.width=Math.round(vp.width); cv.height=Math.round(vp.height);
+  await page.render({canvasContext:cv.getContext('2d'),viewport:vp,background:'rgba(0,0,0,0)'}).promise;
+  return {canvas:cv,inW:v1.width/72};
+}
+function trimAlpha(cv){ // ตัดขอบใสรอบลาย (artboard ที่เผื่อไว้) แล้วบอกสัดส่วนที่เหลือ
+  const w=cv.width,h=cv.height, d=cv.getContext('2d').getImageData(0,0,w,h).data; let x0=w,y0=h,x1=-1,y1=-1;
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++) if(d[(y*w+x)*4+3]>8){ if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }
+  if(x1<0) return null; if(x0===0&&y0===0&&x1===w-1&&y1===h-1) return null;
+  const c=document.createElement('canvas'); c.width=x1-x0+1; c.height=y1-y0+1; c.getContext('2d').drawImage(cv,-x0,-y0);
+  return {canvas:c,fw:c.width/w};
+}
+async function readArt(file){
+  const name=file.name.replace(/\.[^.]+$/,''), ext=(file.name.split('.').pop()||'').toLowerCase(), buf=await file.arrayBuffer();
+  let cv, inW=null;
+  if(ext==='psd'){ const r=decodePSD(buf); cv=r.canvas; if(r.dpi) inW=cv.width/r.dpi; }
+  else if(ext==='ai'||ext==='pdf'||file.type==='application/pdf'){ const r=await renderPDF(buf); cv=r.canvas; inW=r.inW; }
+  else {
+    const isSvg=ext==='svg'||file.type==='image/svg+xml';
+    const url=URL.createObjectURL(new Blob([buf],{type:isSvg?'image/svg+xml':(file.type||'image/png')}));
+    try{ const im=await loadImg(url); let w=im.naturalWidth||1500, h=im.naturalHeight||1500;
+      if(isSvg){ const sz=svgSizeIn(new TextDecoder().decode(buf)); if(sz){ if(!sz.px) inW=sz.w; const k=2000/Math.max(sz.w,sz.h); w=Math.round(sz.w*k); h=Math.round(sz.h*k); } }
+      cv=document.createElement('canvas'); const k=Math.min(isSvg?10:1,2400/Math.max(w,h)); cv.width=Math.max(1,Math.round(w*k)); cv.height=Math.max(1,Math.round(h*k));
+      cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
+      if(!isSvg){ const dpi=ext==='png'?pngDPI(buf):(ext==='jpg'||ext==='jpeg')?jpgDPI(buf):null; if(dpi&&dpi>=20) inW=w/dpi; }
+    } finally { URL.revokeObjectURL(url); }
+  }
+  const tr=trimAlpha(cv); if(tr){ if(inW) inW*=tr.fw; cv=tr.canvas; }
+  if(Math.max(cv.width,cv.height)>1600){ const k=1600/Math.max(cv.width,cv.height), c=document.createElement('canvas'); c.width=Math.round(cv.width*k); c.height=Math.round(cv.height*k); c.getContext('2d').drawImage(cv,0,0,c.width,c.height); cv=c; }
+  return {name, src:cv.toDataURL('image/png'), ratio:cv.height/cv.width, inW};
+}
+
+/* ---------- ลายสกรีน: เปลี่ยนสีลาย ----------
+   pr.cm = {mode:'orig'|'map'|'tint', pal:[สีในลาย], map:[สีใหม่ของแต่ละสี], tint:'#hex', cover:สัดส่วนพิกเซลที่ชุดสีครอบคลุม}
+   เก็บรูปต้นฉบับไว้ (pr.src) แล้วสร้างรูปที่เปลี่ยนสี (pr._rc) ใหม่ทุกครั้ง ไม่บันทึกรูปซ้ำ ประหยัดพื้นที่ */
+const h2r=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)), r2h=c=>'#'+c.map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');
+async function artPalette(src){ // หาสีหลักของลาย สูงสุด 8 สี
+  const im=await loadImg(src), k=Math.min(1,300/Math.max(im.naturalWidth,im.naturalHeight)), w=Math.max(1,Math.round(im.naturalWidth*k)), h=Math.max(1,Math.round(im.naturalHeight*k));
+  const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d'); g.drawImage(im,0,0,w,h); const d=g.getImageData(0,0,w,h).data;
+  const bins={}; let tot=0;
+  for(let i=0;i<d.length;i+=4){ if(d[i+3]<200) continue; tot++; const key=(d[i]>>4)+'-'+(d[i+1]>>4)+'-'+(d[i+2]>>4); const b=bins[key]||(bins[key]=[0,0,0,0]); b[0]+=d[i]; b[1]+=d[i+1]; b[2]+=d[i+2]; b[3]++; }
+  let cl=Object.values(bins).map(b=>({c:[b[0]/b[3],b[1]/b[3],b[2]/b[3]],n:b[3]})).sort((a,b)=>b.n-a.n);
+  const out=[]; // รวมสีที่ใกล้กัน (เงา/ขอบเบลอของสีเดียวกัน)
+  for(const x of cl){ const near=out.find(o=>Math.hypot(o.c[0]-x.c[0],o.c[1]-x.c[1],o.c[2]-x.c[2])<48); if(near){ const n=near.n+x.n; near.c=near.c.map((v,i)=>(v*near.n+x.c[i]*x.n)/n); near.n=n; } else out.push({c:x.c.slice(),n:x.n}); }
+  const top=out.filter(o=>o.n>=tot*0.004).slice(0,8), cover=tot?top.reduce((s,o)=>s+o.n,0)/tot:1;
+  return {pal:top.map(o=>r2h(o.c)), cover, many:out.filter(o=>o.n>=tot*0.004).length>8};
+}
+async function recolorPrint(pr){
+  const c=pr.cm; if(!c||c.mode==='orig'||(c.mode==='map'&&(!c.pal||c.map.every((m,i)=>m===c.pal[i])))){ delete pr._rc; return; }
+  const im=await loadImg(pr.src), w=im.naturalWidth, h=im.naturalHeight, cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+  const g=cv.getContext('2d'); g.drawImage(im,0,0); const id=g.getImageData(0,0,w,h), d=id.data;
+  if(c.mode==='tint'){ const [r,gg,b]=h2r(c.tint||'#111111'); for(let i=0;i<d.length;i+=4){ if(!d[i+3]) continue; d[i]=r; d[i+1]=gg; d[i+2]=b; } }
+  else { const P=c.pal.map(h2r), Q=c.map.map(h2r), cache=new Map();
+    for(let i=0;i<d.length;i+=4){ if(!d[i+3]) continue; const key=(d[i]<<16)|(d[i+1]<<8)|d[i+2]; let j=cache.get(key);
+      if(j===undefined){ let best=1e9; j=0; for(let q=0;q<P.length;q++){ const e=(d[i]-P[q][0])**2+(d[i+1]-P[q][1])**2+(d[i+2]-P[q][2])**2; if(e<best){ best=e; j=q; } } cache.set(key,j); }
+      // เลื่อนสีทั้งก้อนตามส่วนต่าง จึงยังเห็นเฉด/ลายผิวเดิมของสีนั้นอยู่
+      d[i]=Math.max(0,Math.min(255,d[i]+Q[j][0]-P[j][0])); d[i+1]=Math.max(0,Math.min(255,d[i+1]+Q[j][1]-P[j][1])); d[i+2]=Math.max(0,Math.min(255,d[i+2]+Q[j][2]-P[j][2])); } }
+  g.putImageData(id,0,0); pr._rc=cv.toDataURL('image/png');
+}
+function inkHint(pr){ const c=pr.cm; if(!c||c.mode==='orig') return ''; const cols=c.mode==='tint'?[c.tint]:c.map; return ` (สีในภาพ ≈ ${cols.map(x=>x.toUpperCase()).join(', ')} ไม่ใช่ Pantone)`; }
+async function refreshRecolors(){ for(const t in prints) for(const pr of prints[t]) if(pr.cm&&pr.cm.mode!=='orig'){ try{ await recolorPrint(pr); }catch(e){} } render(); buildPrints(); }
+function buildPrintColors(pr){
+  const c=pr.cm||{mode:'orig'};
+  $('prCm').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===c.mode));
+  let h='';
+  if(c.mode==='map'&&c.pal){ h=`<div class="colors" style="flex-wrap:wrap;gap:10px">`+c.pal.map((o,i)=>`<label title="สีเดิม ${o}"><span style="display:inline-block;width:22px;height:22px;border-radius:5px;border:1px solid var(--line);background:${o}"></span> → <input type="color" data-pi="${i}" value="${c.map[i]}"></label>`).join('')+`</div><div class="row" style="margin-top:8px"><button class="small" id="prPalReset">กลับเป็นสีเดิมทุกสี</button></div>`; }
+  if(c.mode==='tint') h=`<div class="colors"><label>สีลาย <input type="color" id="prTint" value="${c.tint||'#111111'}"></label></div>`;
+  $('prPal').innerHTML=h;
+  $('prCmNote').textContent= c.mode==='map'?(c.many||c.cover<0.85?'ลายนี้มีสีไล่ระดับหรือหลายสีมาก การเปลี่ยนทีละสีอาจไม่เนียน แนะนำแยกสีในไฟล์ต้นฉบับ หรือใช้ "สีเดียวทั้งลาย"':`พบ ${c.pal.length} สีในลาย กดช่องสีด้านขวาของลูกศรเพื่อเปลี่ยน`)
+    : c.mode==='tint'?'ทุกส่วนของลายจะเป็นสีเดียวกัน เหมาะกับลายสกรีน 1 สี':'';
+}
+$('prCm').addEventListener('click',async e=>{ const v=e.target.dataset.v, pr=curPrint(); if(!v||!pr) return;
+  pr.cm=Object.assign({mode:'orig'},pr.cm,{mode:v});
+  if(v==='map'&&!pr.cm.pal){ const r=await artPalette(pr.src); Object.assign(pr.cm,{pal:r.pal,map:r.pal.slice(),cover:r.cover,many:r.many}); }
+  if(v==='tint'&&!pr.cm.tint) pr.cm.tint=pr.cm.pal?pr.cm.pal[0]:'#111111';
+  await recolorPrint(pr); prSave(); buildPrints(); render(); });
+$('prPal').addEventListener('input',async e=>{ const pr=curPrint(); if(!pr||!pr.cm) return;
+  if(e.target.dataset.pi!=null) pr.cm.map[+e.target.dataset.pi]=e.target.value; else if(e.target.id==='prTint') pr.cm.tint=e.target.value; else return;
+  await recolorPrint(pr); render(); });
+$('prPal').addEventListener('change',()=>{ prSave(); buildPrints(); });
+$('prPal').addEventListener('click',async e=>{ if(e.target.id!=='prPalReset') return; const pr=curPrint(); if(!pr||!pr.cm) return; pr.cm.map=pr.cm.pal.slice(); await recolorPrint(pr); prSave(); buildPrints(); render(); });
+
+/* ---------- ลายสกรีน: แผงควบคุม ---------- */
+function buildPrints(){
+  const t=state.type, list=printsOf(t); if(!list.some(x=>x.id===printSel)) printSel=null;
+  $('prList').innerHTML=list.length?list.map((pr,i)=>`<div class="lib-item"><img src="${pr._rc||pr.src}" alt="" style="width:40px;height:40px;object-fit:contain;background:#ecebe7;border-radius:4px"><div class="nm">P${i+1} · ${esc(pr.name)}<small>${esc(posInfo(t,pr.pos)[1])} · ${fmt(pr.w)}″ × ${fmt(pr.w*pr.ratio)}″${printWarn(t,state.params[t],pr).length?' · ⚠':''}</small></div><button class="small${pr.id===printSel?' on':''}" data-psel="${pr.id}">${pr.id===printSel?'กำลังแก้':'แก้'}</button><button class="small" data-pdel="${pr.id}">ลบ</button></div>`).join(''):'<p class="empty">ยังไม่มีลาย</p>';
+  const pr=list.find(x=>x.id===printSel); $('prEdit').classList.toggle('hide',!pr);
+  const b=state.style.block||{w:45,h:55}; $('blkW').value=b.w; $('blkH').value=b.h;
+  if(!pr) return;
+  $('prPos').innerHTML=PRINT_POS[T[t].cat].map(o=>`<option value="${o[0]}">${o[1]}</option>`).join(''); $('prPos').value=pr.pos;
+  $('prTech').innerHTML=PR_TECH.map(o=>`<option value="${esc(o)}">${o?esc(o):'ยังไม่ระบุ [TBC]'}</option>`).join(''); $('prTech').value=pr.tech||'';
+  $('prName').value=pr.name; $('prW').value=fmt(pr.w); $('prH').value=fmt(pr.w*pr.ratio); $('prY').value=fmt(+pr.y); $('prX').value=fmt(+pr.x);
+  const sl=pr.pos.startsWith('slv');
+  $('prYLab').textContent=sl?'ห่างตะเข็บไหล่ตามแนวแขน (นิ้ว)':T[t].cat==='top'?'ห่างจาก HPS ลงมา (นิ้ว)':'ห่างจากขอบเอวลงมา (นิ้ว)';
+  $('prXLab').textContent=sl?'เลื่อนขวางแขน (นิ้ว)':'ห่างจากกลาง CF (นิ้ว, + = ขวาของภาพ)';
+  $('prRot').value=pr.rot||0; $('prRotV').textContent=(pr.rot||0)+'°';
+  const op=pr.op==null?100:+pr.op; $('prOp').value=op; $('prOpV').textContent=op+'%'; $('prMul').checked=!!pr.mul; $('prInk').value=pr.ink||'';
+  $('prSizeNote').textContent=pr.fileW?`ขนาดจริงจากไฟล์: ${fmt(pr.fileW)}″ (${cm(pr.fileW)} ซม.)${Math.abs(pr.fileW-pr.w)>0.05?' · ตอนนี้ใช้ขนาดที่แก้เอง':''}`:'ไฟล์ไม่มีข้อมูลขนาดจริง ใส่ความกว้างจริงของลายเอง';
+  buildPrintColors(pr);
+}
+function prSave(){ const r=savePrints(); if(r!==true&&!prSave.warned){ prSave.warned=true; toast(r==='quota'?'จำลายในเบราว์เซอร์ไม่ได้ เพราะพื้นที่เต็ม ลองลบลายที่ไม่ใช้':'หน้านี้จำลายไว้ไม่ได้ ใช้ได้จนกว่าจะปิดหน้า'); } }
+function curPrint(){ return printsOf(state.type).find(x=>x.id===printSel); }
+function prSet(k,v,rebuild){ const pr=curPrint(); if(!pr) return; pr[k]=v; prSave(); if(rebuild) buildPrints(); render(); }
+$('prAdd').onclick=()=>$('prFile').click();
+$('prFile').onchange=async e=>{ const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  toast('กำลังอ่านไฟล์ลาย…');
+  try{ const a=await readArt(f), t=state.type, p=state.params[t], list=printsOf(t);
+    const pos=T[t].cat==='top'?(list.some(x=>x.pos==='cchest')?'fullback':'cchest'):'legL', pl=presetPlace(t,p,pos);
+    const pr={id:Date.now().toString(36),name:a.name,src:a.src,ratio:a.ratio,w:a.inW?Math.round(a.inW*100)/100:pl.w,fileW:a.inW?Math.round(a.inW*100)/100:null,pos,x:pl.x,y:pl.y,rot:0,op:100,mul:false,tech:'',ink:''};
+    list.push(pr); printSel=pr.id; prSave(); buildPrints(); render();
+    toast(a.inW?`ใส่ลายแล้ว ขนาดจริงจากไฟล์ ${fmt(pr.w)}″ × ${fmt(pr.w*pr.ratio)}″`:`ใส่ลายแล้ว ไฟล์ไม่มีขนาดจริง ตั้งกว้าง ${fmt(pr.w)}″ ไว้ก่อน แก้ได้ในช่อง "กว้าง"`);
+  }catch(err){ toast(err&&err.message?err.message:'เปิดไฟล์นี้ไม่ได้ ลอง Export เป็น PNG'); }
+};
+$('prList').addEventListener('click',e=>{ const s=e.target.dataset.psel, d=e.target.dataset.pdel;
+  if(s){ printSel=printSel===s?null:s; buildPrints(); render(); }
+  if(d&&armed(e.target,'กดอีกครั้งเพื่อลบ')){ prints[state.type]=printsOf(state.type).filter(x=>x.id!==d); if(printSel===d) printSel=null; prSave(); buildPrints(); render(); }
+});
+$('prName').addEventListener('input',e=>prSet('name',e.target.value.trim()||'ลาย'));
+$('prPos').addEventListener('change',e=>{ const pr=curPrint(); if(!pr) return; const pl=presetPlace(state.type,state.params[state.type],e.target.value); pr.pos=e.target.value; pr.x=pl.x; pr.y=pl.y; if(!pr.fileW) pr.w=pl.w; pr.rot=0; prSave(); buildPrints(); render(); });
+$('prW').addEventListener('input',e=>{ const v=+e.target.value; if(v>=0.25){ prSet('w',v); $('prH').value=fmt(v*curPrint().ratio); } });
+$('prH').addEventListener('input',e=>{ const v=+e.target.value, pr=curPrint(); if(pr&&v>=0.25){ prSet('w',v/pr.ratio); $('prW').value=fmt(pr.w); } });
+for(const [id,k] of [['prY','y'],['prX','x']]) $(id).addEventListener('input',e=>{ const v=+e.target.value; if(isFinite(v)) prSet(k,v); });
+for(const id of ['prW','prH','prY','prX']) $(id).addEventListener('change',()=>buildPrints());
+$('prRot').addEventListener('input',e=>{ $('prRotV').textContent=e.target.value+'°'; prSet('rot',+e.target.value); });
+$('prOp').addEventListener('input',e=>{ $('prOpV').textContent=e.target.value+'%'; prSet('op',+e.target.value); });
+$('prMul').addEventListener('change',e=>prSet('mul',e.target.checked));
+$('prTech').addEventListener('change',e=>prSet('tech',e.target.value));
+$('prInk').addEventListener('input',e=>prSet('ink',e.target.value.trim()));
+for(const [id,k] of [['blkW','w'],['blkH','h']]) $(id).addEventListener('input',e=>{ const v=+e.target.value; if(v>=5){ state.style.block=Object.assign({w:45,h:55},state.style.block,{[k]:v}); buildPrints(); render(); } });
+/* ลากลายในภาพ (ทำงานก่อนการลากรูปเทียบ) */
+let pdrag=null;
+stage.addEventListener('pointerdown',ev=>{
+  const pr=curPrint(); if(state.mode!=='flat'||!pr||calib||!$('prDrag').checked) return;
+  ev.stopImmediatePropagation(); pdrag={start:svgPt(ev),x:+pr.x||0,y:+pr.y||0}; stage.setPointerCapture(ev.pointerId);
+},true);
+stage.addEventListener('pointermove',ev=>{ if(!pdrag) return; ev.stopImmediatePropagation(); const pr=curPrint(); if(!pr){ pdrag=null; return; }
+  const q=svgPt(ev); let dx=q[0]-pdrag.start[0], dy=q[1]-pdrag.start[1];
+  if(pr.pos==='slvL'||pr.pos==='slvR'){ const g=printGeom(state.type,state.params[state.type],pr); const ds=pr.pos==='slvR'?[-g.dS[0],g.dS[1]]:g.dS, pp=pr.pos==='slvR'?[-g.perp[0],g.perp[1]]:g.perp;
+    pr.y=Math.round((pdrag.y+dx*ds[0]+dy*ds[1])*8)/8; pr.x=Math.round((pdrag.x+dx*pp[0]+dy*pp[1])*8)/8; }
+  else { pr.x=Math.round((pdrag.x+dx)*8)/8; pr.y=Math.round((pdrag.y+dy)*8)/8; }
+  render(); $('prY').value=fmt(pr.y); $('prX').value=fmt(pr.x); },true);
+stage.addEventListener('pointerup',ev=>{ if(!pdrag) return; ev.stopImmediatePropagation(); pdrag=null; prSave(); buildPrints(); },true);
 
 /* ---------- คลังทรง ---------- */
 function renderLib(){
@@ -1425,9 +1772,12 @@ $('libImport').onchange=e=>{ const f=e.target.files[0]; if(!f) return; f.text().
 
 /* ---------- ดาวน์โหลด ---------- */
 function download(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500); }
-function exportSvg(pxPerIn){ const r=state.mode==='flat'?flatInner(true):lookInner(true); return svgWrap(r.inner,r.vb,pxPerIn); }
-function fileBase(){ const t=state.type, nm=(state.info[t].name||'').replace(/[^\w\-ก-๙]+/g,'_').replace(/^_|_$/g,'');
-  return state.mode==='flat'?`NWL_Flat_${nm||t}_${state.info[t].ver||'v1'}`:`NWL_Lineup_${new Date().toISOString().slice(0,10)}`; }
+function exportSvg(pxPerIn){ const r=state.mode==='flat'?flatInner(true):lookInner(true);
+  return state.style.page==='a4'?pageSvg(r.inner,r.vb,{px:pxPerIn?300:0}):svgWrap(r.inner,r.vb,pxPerIn); }
+function fileBase(){ const t=state.type, nm=(state.info[t].name||'').replace(/[^\w\-ก-๙]+/g,'_').replace(/^_|_$/g,''), a4=state.style.page==='a4'?'_A4':'';
+  return (state.mode==='flat'?`NWL_Flat_${nm||t}_${state.info[t].ver||'v1'}`:`NWL_Lineup_${new Date().toISOString().slice(0,10)}`)+a4; }
+$('pageMode').value=state.style.page||'a4';
+$('pageMode').addEventListener('change',e=>{ state.style.page=e.target.value; render(); toast(e.target.value==='a4'?'ไฟล์ที่ดาวน์โหลดจะเป็นหน้า A4 แนวนอน (PNG 300 dpi)':'ไฟล์ที่ดาวน์โหลดจะพอดีขนาดงาน ไม่มีหน้ากระดาษ'); });
 $('dlSvg').onclick=()=>download(new Blob([exportSvg(0)],{type:'image/svg+xml'}),fileBase()+'.svg');
 $('dlPng').onclick=()=>{
   const s=exportSvg(40), m=s.match(/width="(\d+)" height="(\d+)"/), w=+m[1], h=+m[2];
@@ -1440,6 +1790,7 @@ function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show
 
 /* ---------- เริ่ม ---------- */
 buildTypeSelect(); $('type').value=state.type; buildFields(); bindStyle(); renderLib(); setMode(state.mode);
+refreshRecolors();
 </script>
 </body>
 </html>
