@@ -142,6 +142,7 @@
 
       <section class="card">
         <h2><span class="step">3</span>วิธีเย็บ · Construction</h2>
+        <div class="row hide" id="consPreset" style="margin-bottom:12px"><button class="small" id="presetCrop">ใช้แบบ Crop Zip ขาดดิบ (ตามรูปอ้างอิง)</button></div>
         <div class="fields cons" id="consBox"></div>
         <label class="f">หมายเหตุเพิ่มเติม (บรรทัดละ 1 ข้อ จะขึ้นท้ายตารางวิธีเย็บ)</label>
         <textarea id="consNotes" rows="3" placeholder="เช่น ซิป YKK #5 สีดำ&#10;ริบ 1×1 คอตตอน 95%&#10;ป้ายคอพิมพ์ ไม่เย็บป้าย" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;resize:vertical"></textarea>
@@ -449,12 +450,14 @@ const isPolo=K=>K.neck==='polo';
 const HOOD_CONS=[
   {k:'hood',label:'ฮู้ด',en:'Hood construction',type:'sel',opts:[['2','ฮู้ด 2 ชิ้น (ตะเข็บกลาง)'],['3','ฮู้ด 3 ชิ้น (มีแถบกลาง)']],def:'2',tag:true},
   {k:'cord',label:'เชือกฮู้ด',en:'Drawcord',type:'chk',def:true},
-  {k:'finish',label:'ชายและปลายแขน',en:'Hem & cuff finish',type:'sel',opts:[['rib','จั๊มริบ (rib)'],['self','พับเย็บ ไม่มีจั๊ม (self hem)']],def:'rib',tag:true},
+  {k:'finish',label:'ชายและปลายแขน',en:'Hem & cuff finish',type:'sel',opts:[['rib','จั๊มริบ (rib)'],['self','พับเย็บ ไม่มีจั๊ม (self hem)'],['raw','ขาดดิบ ไม่มีจั๊ม (raw edge)']],def:'rib',tag:true},
+  {k:'neckLabel',label:'ป้ายคอหลัง',en:'Back neck label',type:'chk',def:false,tag:true},
+  {k:'hemLabel',label:'ป้ายธงที่ชาย',en:'Hem flag label',type:'sel',opts:[['none','ไม่มี'],['R','ด้านขวาผู้สวม'],['L','ด้านซ้ายผู้สวม']],def:'none',tag:true},
   {k:'pkt',label:'กระเป๋า',en:'Pocket style',type:'sel',opts:[['kanga','กระเป๋าจิงโจ้ (kangaroo)'],['side','กระเป๋าเฉียงข้าง (side slant)'],['none','ไม่มีกระเป๋า']],def:'kanga',tag:true},
   stz('s_hood','ตะเข็บขอบฮู้ด','Hood edge topstitch','1'),
   stz('s_pkt','ตะเข็บกระเป๋า','Pocket topstitch','1',K=>K.pkt!=='none'),
   stz('s_arm','ตะเข็บวงแขน','Armhole topstitch','n'),
-  stz('s_hem','ตะเข็บชาย/ปลายแขน','Hem & cuff topstitch','n'),
+  stz('s_hem','ตะเข็บชาย/ปลายแขน','Hem & cuff topstitch','n',K=>K.finish!=='raw'),
 ];
 const CONS={
   tee:[
@@ -472,7 +475,7 @@ const CONS={
     stz('s_hem','ตะเข็บชายเสื้อ','Bottom hem','2',K=>K.hemFin!=='raw'),
     GAP],
   hoodie:HOOD_CONS.concat([GAP]),
-  zip:HOOD_CONS.concat([stz('s_zip','ตะเข็บข้างซิป','Zipper topstitch','1'),GAP]),
+  zip:HOOD_CONS.concat([{k:'zip2',label:'ซิป',en:'Zipper type',type:'sel',opts:[['1','ซิปทางเดียว (one-way)'],['2','ซิป 2 ทาง (two-way)']],def:'1',tag:true},stz('s_zip','ตะเข็บข้างซิป','Zipper topstitch','1'),GAP]),
   jeans:[{k:'coin',label:'กระเป๋าเหรียญ',en:'Coin pocket',type:'chk',def:true,tag:true},{k:'rivet',label:'หมุดย้ำ',en:'Rivets',type:'chk',def:true,tag:true},stz('s_wb','ตะเข็บขอบเอว','Waistband','1'),stz('s_fly','ตะเข็บซิปหน้า (J-stitch)','Fly','2'),stz('s_pkt','ตะเข็บปากกระเป๋าหน้า','Front pocket','1'),
     stz('s_yoke','ตะเข็บแอกหลัง','Back yoke','2'),stz('s_bpkt','ตะเข็บกระเป๋าหลัง','Back pocket','2'),stz('s_hem','ตะเข็บปลายขา','Leg hem','1'),GAP],
   sweat:[{k:'cord',label:'เชือกเอว',en:'Drawcord',type:'chk',def:true},stz('s_wb','ตะเข็บขอบเอว (ช่องยางยืด)','Waistband channel','n'),
@@ -561,7 +564,7 @@ function styler(fab,fid){
   const dk=fab?(fab.depthK==null?0.6:+fab.depthK):0, ik=fab?(fab.inK==null?0.5:+fab.inK):0; // ความเข้มเงามิติ / ความเข้มด้านใน (0–1)
   const trim=fab&&(fab.trim||'solid')==='solid'?(fab.trimColor||auto):null;
   let shade;
-  if(!fab) shade=s.shade?shadeOf(s.fill,s.line):s.fill;
+  if(!fab){ const L=h2r(s.fill).reduce((a,b)=>a+b,0)/765; shade=s.shade?mixHex(s.fill,'#000000',L>0.6?0.12:0.3):s.fill; } // ด้านในฮู้ด/คอเข้มกว่าข้างนอก เห็นชัดทั้งผ้าสีอ่อนและสีเข้ม
   else { const ins=fab.inside||'same';
     shade= ins==='same'?`url(#${fid}S)` : mixHex(fab.inColor||(ins==='base'?mixHex(auto,'#ffffff',0.6):'#2b2b2b'),'#000000',0.45*ik); }
   return {
@@ -651,10 +654,10 @@ const mirrorSvg=s=>s.includes('<')?s.replace(/ d="([^"]*)"/g,(m,d)=>' d="'+flipP
 /* ---------- เสื้อ ---------- */
 function buildTop(type,p,o,S){
   const K=o.cons||consOf(type), gap=+K.gap||0.25;
-  const hood=type!=='tee', zip=type==='zip', back=!!o.back, selfFin=hood&&K.finish==='self';
+  const hood=type!=='tee', zip=type==='zip', back=!!o.back, selfFin=hood&&(K.finish==='self'||K.finish==='raw');
   const {C,L,SL,SO,AH,H,NW,ND,SS}=p, Sh=p.S, RB=hood&&!selfFin?p.RB:0, BND=0.75;
   const CF=hood?(!selfFin?p.CF:0):(K.slvFin==='rib'?(p.CF||1):0);
-  const hs=hood?'straight':(K.hemShape||'straight'), HS=p.HS||2, rawHem=!hood&&K.hemFin==='raw';
+  const hs=hood?'straight':(K.hemShape||'straight'), HS=p.HS||2, rawHem=(!hood&&K.hemFin==='raw')||(hood&&K.finish==='raw');
   const th=p.ANG*Math.PI/180, d=[Math.cos(th),Math.sin(th)], n=[-Math.sin(th),Math.cos(th)];
   const sh=[Sh/2,SS], U=[C/2,AH];
   const c1=[sh[0]+0.15,sh[1]+(U[1]-sh[1])*0.45], c2=[U[0]-0.25,U[1]-(U[1]-sh[1])*0.25];
@@ -755,12 +758,16 @@ function buildTop(type,p,o,S){
     const hoodPts=[[-w0-0.2,0.3],[-HW/2+0.35,-HH*0.3],[-HW/2,-HH*0.62],[-HW*0.34,-HH*0.9],[0,-HH],[HW*0.34,-HH*0.9],[HW/2,-HH*0.62],[HW/2-0.35,-HH*0.3],[w0+0.2,0.3]];
     const hoodOuter=`M${pt(hoodPts[0])}`+crSeg(hoodPts);
     if(!back){
-      behind=S.shape(hoodOuter+'Z');
+      // ปิดฐานฮู้ดตามแนวคอหน้า (ลงไปถึง ND) ไม่ให้เห็นช่องว่างสีขาวใต้ฮู้ด
+      behind=S.shape(hoodOuter+` C${pt([w0+0.1,ND*0.75])} ${pt([w0*0.5,ND+0.1])} ${pt([0,ND+0.1])} C${pt([-w0*0.5,ND+0.1])} ${pt([-w0-0.1,ND*0.75])} ${pt(hoodPts[0])}Z`);
       if(!o.look){
         const op=[[0,ND],[-NW*0.45,ND*0.15],[-HW*0.36,-HH*0.38],[-HW*0.3,-HH*0.72],[0,-HH+1.2],[HW*0.3,-HH*0.72],[HW*0.36,-HH*0.38],[NW*0.45,ND*0.15],[0,ND]];
         if(three) behind+=S.ln(`M${pt([-1.5,-HH+1.3])} Q${pt([-1.6,-HH+0.5])} ${pt([-1.55,-HH+0.06])} M${pt([1.5,-HH+1.3])} Q${pt([1.6,-HH+0.5])} ${pt([1.55,-HH+0.06])}`);
         front+=S.shape(`M${pt(op[0])}`+crSeg(op)+'Z',S.shade);
         front+=rows(nRows(K.s_hood),q=>{ const pp=[[-0.6-q,ND-0.3-q]].concat(op.slice(1,-1).map(v=>[v[0]*(1.12+q*0.12),v[1]-0.3-q]),[[0.6+q,ND-0.3-q]]); return `M${pt(pp[0])}`+crSeg(pp); },0,gap);
+        if(K.neckLabel){ // ป้ายคอหลัง เห็นผ่านช่องฮู้ด
+          front+=`<rect x="-1.1" y="0.15" width="2.2" height="0.85" rx="0.06" fill="#151515" stroke="${S.line}" stroke-width="${fx(S.lw*0.5)}"/><path d="M-0.7 0.5 L0.7 0.5 M-0.4 0.72 L0.4 0.72" stroke="#fff" stroke-width="0.06" opacity=".8"/>`;
+          anchors.neckLabel=[1.9,0.6]; }
         anchors.hood=[HW*0.18,-HH*0.92]; anchors.s_hood=[-HW*0.47,-HH*0.45];
       } else {
         front+=S.ln(`M${pt([-w0,0.1])} Q${pt([-NW*0.2,ND*0.8])} ${pt([0,ND])} Q${pt([NW*0.2,ND*0.8])} ${pt([w0,0.1])}`,0.8);
@@ -790,8 +797,13 @@ function buildTop(type,p,o,S){
       for(let k=1;k<m;k++){const t=k/m; rib+=`M${pt([-C/2+C*t,yr+0.1])} L${pt([-H/2+H*t,L-0.1])} `;}
       det+=S.rib(rib);
       det+=rows(nRows(K.s_hem),q=>`M${pt([-C/2+0.1,yr-q])} L${pt([C/2-0.1,yr-q])}`,0.15,gap);
-    } else det+=rows(nRows(K.s_hem),q=>`M${pt([-H/2+0.15,L-q])} L${pt([H/2-0.15,L-q])}`,1.0,-gap);
+    } else if(rawHem) det+=fray([[-H/2,L],[H/2,L]],[0,1],S);
+    else det+=rows(nRows(K.s_hem),q=>`M${pt([-H/2+0.15,L-q])} L${pt([H/2-0.15,L-q])}`,1.0,-gap);
     anchors.finish=[C/2-1.6,L-Math.max(RB,1.2)/2]; anchors.s_hem=[-C/2+1.6,yr-1.2];
+    if(!back&&K.hemLabel&&K.hemLabel!=='none'){ // ป้ายธงที่ชาย (ขวาผู้สวม = ซ้ายของภาพด้านหน้า)
+      const sg=K.hemLabel==='R'?-1:1, x=sg*(H/2-2.0);
+      det+=`<rect x="${fx(x-0.45)}" y="${fx(L-1.75)}" width="0.9" height="1.5" rx="0.05" fill="#151515" stroke="${S.line}" stroke-width="${fx(S.lw*0.5)}"/><path d="M${fx(x-0.25)} ${fx(L-1.2)} L${fx(x+0.25)} ${fx(L-0.9)}" stroke="#fff" stroke-width="0.07" opacity=".8"/>`;
+      anchors.hemLabel=[x-sg*1.1,L-1.0]; }
     if(!back){
       const yb=RB>0?yr:L-1.6, yt=yb-p.PH, pt_=C*0.2, pb=C*0.36, yo=yt+p.PH*0.62;
       const nP=nRows(K.s_pkt);
@@ -812,6 +824,10 @@ function buildTop(type,p,o,S){
         det+=S.shape(`M${pt([-0.22,ND])} L${pt([0.22,ND])} L${pt([0.22,L])} L${pt([-0.22,L])}Z`);
         det+=`<path d="M0 ${fx(ND+0.1)} L0 ${fx(L-0.1)}" stroke="${S.line}" stroke-width="${fx(S.lw*1.6)}" stroke-dasharray="0.08 0.08" opacity=".55"/>`;
         det+=S.shape(`M${pt([0.12,ND+0.2])} L${pt([0.5,ND+0.2])} L${pt([0.5,ND+1.5])} L${pt([0.12,ND+1.5])}Z`);
+        if(K.zip2==='2'){ // ซิป 2 ทาง: หัวซิปตัวล่างหันขึ้น
+          det+=S.shape(`M${pt([-0.32,L-1.0])} L${pt([0.32,L-1.0])} L${pt([0.26,L-0.25])} L${pt([-0.26,L-0.25])}Z`);
+          det+=S.shape(`M${pt([0.12,L-2.3])} L${pt([0.5,L-2.3])} L${pt([0.5,L-1.0])} L${pt([0.12,L-1.0])}Z`);
+          anchors.zip2=[1.0,L-2.0]; }
         for(const sg of [-1,1]) det+=rows(nRows(K.s_zip),q=>`M${pt([sg*q,ND+0.2])} L${pt([sg*q,L-0.1])}`,0.36,gap);
         anchors.s_zip=[-1.1,ND+5];
       } else if(pk==='kanga'){
@@ -837,7 +853,7 @@ function buildTop(type,p,o,S){
     const m=Math.max(4,Math.round(SO/0.42)); let r='';
     for(let k=1;k<m;k++){const t=k/m; r+=`M${pt(lerp(A2,B2,t))} L${pt(lerp(A,B,t))} `;} sdet+=S.rib(r);
     sdet+=rows(nS,q=>`M${pt(sub(A2,mul(dS,q)))} L${pt(add(B2,mul(dU,q)))}`,0.15,gap);
-  } else if(!hood&&K.slvFin==='raw'){
+  } else if((!hood&&K.slvFin==='raw')||(hood&&K.finish==='raw')){
     sdet+=fray([A,B],dS,S);
   } else {
     sdet+=rows(nS,q=>`M${pt(sub(A,mul(dS,q)))} L${pt(add(B,mul(dU,q)))}`,0.9,-gap);
@@ -1371,7 +1387,7 @@ $('fbOx').addEventListener('input',e=>{ $('fbOxV').textContent=fmt(+e.target.val
 $('fbOy').addEventListener('input',e=>{ $('fbOyV').textContent=fmt(+e.target.value)+'″'; fabSet('oy',+e.target.value); });
 $('fbMode').addEventListener('click',e=>{ const v=e.target.dataset.v; if(v) fabSet('mirror',v,true); });
 function buildCons(){
-  const t=state.type, K=state.cons[t], set=state.consSet[t], nums=tagNums(t,K); $('consNotes').value=state.notes[t]||'';
+  const t=state.type, K=state.cons[t], set=state.consSet[t], nums=tagNums(t,K); $('consPreset').classList.toggle('hide',t!=='zip'&&t!=='hoodie'); $('consNotes').value=state.notes[t]||'';
   $('consBox').innerHTML=consVisible(t,K).map(c=>{
     const badge=set[c.k]?'':`<button type="button" class="badge s okbtn" data-ok="${c.k}" title="ค่าที่เลือกอยู่ตรงกับค่าตั้งต้น กดเพื่อยืนยันว่าใช้ค่านี้จริง">ยังไม่ยืนยัน · กดยืนยัน</button>`, tag=nums[c.k]?`<span class="ctag">${nums[c.k]}</span>`:'';
     let ctl;
@@ -1384,6 +1400,11 @@ function buildCons(){
 /* ค่าที่ตรงกับค่าตั้งต้น เลือกซ้ำใน dropdown จะไม่นับว่าเปลี่ยน จึงต้องมีปุ่มยืนยันแยก */
 $('consBox').addEventListener('click',e=>{ const k=e.target.dataset.ok; if(!k) return; e.preventDefault(); state.consSet[state.type][k]=true; buildCons(); render(); });
 $('consOkAll').onclick=()=>{ const t=state.type; for(const c of consVisible(t)) state.consSet[t][c.k]=true; buildCons(); render(); toast('ยืนยันวิธีเย็บทุกข้อแล้ว [TBC] จะหายจากตาราง'); };
+/* แบบอ้างอิง Crop Zip ขาดดิบ: ตั้งเฉพาะวิธีเย็บและรายละเอียด ตัวเลขวัดต้องใส่จากตัวอย่างจริงเอง */
+$('presetCrop').onclick=()=>{ const t=state.type, K=state.cons[t], set=state.consSet[t];
+  const v={finish:'raw',cord:false,neckLabel:true,hemLabel:'R',pkt:'kanga'}; if(t==='zip') v.zip2='2';
+  for(const k in v){ K[k]=v[k]; set[k]=true; } buildCons(); render();
+  toast('ตั้งค่าแล้ว: ชายและปลายแขนขาดดิบ ไม่มีเชือก ป้ายคอหลัง ป้ายธงชายขวา'+(t==='zip'?' ซิป 2 ทาง':'')+' · ตัวเลขวัดทรงครอปให้ใส่จากตัวอย่างจริง'); };
 $('consNotes').addEventListener('input',e=>{ state.notes[state.type]=e.target.value; render(); });
 $('consBox').addEventListener('change',e=>{ const k=e.target.dataset.c; if(!k) return; const t=state.type;
   state.cons[t][k]=e.target.type==='checkbox'?e.target.checked:e.target.value; state.consSet[t][k]=true; buildCons(); render(); });
