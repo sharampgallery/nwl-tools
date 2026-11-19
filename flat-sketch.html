@@ -1516,16 +1516,33 @@ const PRINT_POS={
   bottom:[['legL','ต้นขาซ้าย (ผู้สวม) · ด้านหน้า','front'],['legR','ต้นขาขวา (ผู้สวม) · ด้านหน้า','front'],['hipB','สะโพกหลัง','back'],['custF','กำหนดเอง · ด้านหน้า','front'],['custB','กำหนดเอง · ด้านหลัง','back']]};
 const PR_TECH=['','สกรีนหมึกยาง (Plastisol)','สกรีนหมึกน้ำ (Water-based)','ดิสชาร์จ (Discharge)','DTF','DTG','ปัก (Embroidery)','อื่นๆ (ระบุในหมายเหตุ)'];
 function posInfo(t,pos){ const L=PRINT_POS[T[t].cat]; return L.find(x=>x[0]===pos)||L[0]; }
-function presetPlace(t,p,pos){ // ตำแหน่งเริ่มต้น ปรับต่อได้ทุกค่า
-  if(T[t].cat==='top'){ const nd=p.ND||3;
+
+/* จุดอ้างอิงแนวตั้งของลายตัวเสื้อ = ใต้ผ้าคอตรงกลาง (ด้านหน้า CF / ด้านหลัง CB) วัดจากระดับ HPS
+   คอกลม/กุ๊น = ใต้ผ้าคอ, คอวี = ปลาย V, คอเต่า = ตะเข็บคอ, คอโปโล = ปลายสาบบน, ฮู้ด = ตะเข็บคอหน้า/หลัง */
+function neckRefY(t,p,view){
+  if(T[t].cat!=='top') return 0;
+  const K=state.cons[t]||{}, bw=p.NR||0.875, ND=p.ND||3, BND=0.75;
+  if(t!=='tee') return view==='back'?BND:ND;
+  const ns=K.neck||'crew';
+  if(view==='back'){ if(ns==='mock') return BND*0.6; if(ns==='polo'){ const CW=p.CW||2.75; return 0.5*((p.SS||1)*0.5+0.15)+0.5*(CW*0.85+0.3); } return BND+bw; }
+  if(ns==='mock') return ND*0.55; if(ns==='polo') return ND; if(ns==='vneck') return ND+bw*1.6; return ND+bw;
+}
+const isTopTorso=(t,pr)=>T[t].cat==='top'&&!pr.pos.startsWith('slv');
+const prView=(t,pr)=>posInfo(t,pr.pos)[2];
+// ลายตัวเสื้อเก็บเป็น yn = ระยะใต้คอ (งานเก่าที่เก็บเป็น y จาก HPS ยังอยู่ตำแหน่งเดิม จนกว่าจะแก้)
+function prY(t,p,pr){ return isTopTorso(t,pr)&&pr.yn!=null?neckRefY(t,p,prView(t,pr))+(+pr.yn):(+pr.y||0); }
+function prShownY(t,p,pr){ return isTopTorso(t,pr)?prY(t,p,pr)-neckRefY(t,p,prView(t,pr)):(+pr.y||0); }
+function setPrY(t,p,pr,v){ if(isTopTorso(t,pr)){ pr.yn=v; delete pr.y; } else pr.y=v; }
+function presetPlace(t,p,pos){ // ตำแหน่งเริ่มต้น ปรับต่อได้ทุกค่า (ตัวเสื้อ: yn = ห่างใต้คอ)
+  if(T[t].cat==='top'){
     switch(pos){
-      case 'cchest': return {x:0,y:nd+2.5,w:Math.min(10,p.C*0.45)};
-      case 'lchest': return {x:p.C*0.2,y:nd+2,w:3.5};
-      case 'full': return {x:0,y:nd+2,w:Math.min(12,p.C-5)};
-      case 'upback': return {x:0,y:2.5,w:Math.min(9,p.C*0.4)};
-      case 'fullback': return {x:0,y:4,w:Math.min(12,p.C-5)};
+      case 'cchest': return {x:0,yn:2.5,w:Math.min(10,p.C*0.45)};
+      case 'lchest': return {x:p.C*0.2,yn:2,w:3.5};
+      case 'full': return {x:0,yn:2,w:Math.min(12,p.C-5)};
+      case 'upback': return {x:0,yn:1.5,w:Math.min(9,p.C*0.4)};
+      case 'fullback': return {x:0,yn:3,w:Math.min(12,p.C-5)};
       case 'slvL': case 'slvR': return {x:0,y:1.5,w:2.5};
-      default: return {x:0,y:nd+2.5,w:8}; } }
+      default: return {x:0,yn:2.5,w:8}; } }
   const xo=Math.max(p.Hp/2,0.85*p.T+0.3), ct=xo-0.85*p.T/2;
   switch(pos){
     case 'legL': return {x:ct,y:p.R+2,w:3};
@@ -1542,7 +1559,7 @@ function printGeom(t,p,pr,o){ // ตำแหน่งกึ่งกลาง�
     if(pr.pos==='slvR'){ c=mx(c); ang=-ang; }
     return {cx:c[0],cy:c[1],ang,w,h,kind:'sleeve',dS,perp};
   }
-  return {cx:+pr.x||0,cy:(+pr.y||0)+h/2,ang:+pr.rot||0,w,h,kind:'torso'};
+  return {cx:+pr.x||0,cy:prY(t,p,pr)+h/2,ang:+pr.rot||0,w,h,kind:'torso'};
 }
 const cm=v=>(Math.round(v*2.54*10)/10).toString();
 function printWarn(t,p,pr){
@@ -1550,9 +1567,9 @@ function printWarn(t,p,pr){
   if(w>b.w/2.54+0.01||h>b.h/2.54+0.01) out.push(`ใหญ่กว่าบล็อกสกรีน ${b.w}×${b.h} ซม.`);
   if(T[t].cat==='top'){
     if(pr.pos==='slvL'||pr.pos==='slvR'){ if(w>p.AH*0.85) out.push('กว้างเกินหน้าแขน'); if((+pr.y)+h>p.SL-0.4) out.push('เลยปลายแขน'); }
-    else { const x=+pr.x, y=+pr.y, back=posInfo(t,pr.pos)[2]==='back';
+    else { const x=+pr.x, y=prY(t,p,pr), yn=prShownY(t,p,pr), back=prView(t,pr)==='back';
       if(Math.abs(x)+w/2>p.C/2-0.25) out.push('เลยตะเข็บข้าง/แขน');
-      if(Math.abs(x)-w/2<p.NW/2+0.5&&y<(back?1:(p.ND||3)+0.75)) out.push(back?'ชิดคอหลัง':'ชิดหรือทับคอ');
+      if(Math.abs(x)-w/2<p.NW/2+0.5&&yn<0.5) out.push(back?'ชิดหรือทับคอหลัง':'ชิดหรือทับคอ');
       if(y+h>p.L-(t==='tee'?1.2:(p.RB||1))-0.25) out.push('ทับชาย/จั๊มชาย'); }
   }
   return out;
@@ -1569,10 +1586,13 @@ function printsLayer(t,p,view,r,o){
   for(const pr of list){ const g=printGeom(t,p,pr,o), n=all.indexOf(pr)+1;
     const Lx=g.cx-g.w/2, Rx=g.cx+g.w/2, Ty=g.cy-g.h/2, By=g.cy+g.h/2;
     if(o.dims&&g.kind==='torso'&&!g.ang){
-      s+=pd([Lx-0.7,0],[Lx-0.7,Ty],`P${n} ห่าง${top?' HPS':'ขอบเอว'} ${fmt(Ty)}″`);
+      const ref=neckRefY(t,p,view);
+      if(top){ s+=`<path d="M0 ${fx(ref)} L${fx(Lx-0.7)} ${fx(ref)}" stroke="${PCOL}" stroke-width="0.02" stroke-dasharray="0.12 0.1" fill="none" opacity=".8"/><circle cx="0" cy="${fx(ref)}" r="0.1" fill="${PCOL}"/>`;
+        s+=pd([Lx-0.7,ref],[Lx-0.7,Ty],`P${n} ใต้คอ${view==='back'?'หลัง':''} ${fmt(Ty-ref)}″`); }
+      else s+=pd([Lx-0.7,0],[Lx-0.7,Ty],`P${n} ห่างขอบเอว ${fmt(Ty)}″`);
       s+=pd([Lx,Ty],[Rx,Ty],`กว้าง ${fmt(g.w)}″`,[0,-0.55]);
       s+=pd([Rx,Ty],[Rx,By],`สูง ${fmt(g.h)}″`,[0.55,0]);
-      if(Math.abs(g.cx)>0.05) s+=pd([0,By+0.6],[g.cx,By+0.6],`ห่าง CF ${fmt(Math.abs(g.cx))}″`);
+      if(Math.abs(g.cx)>0.05) s+=pd([0,By+0.6],[g.cx,By+0.6],`ห่าง ${view==='back'?'CB':'CF'} ${fmt(Math.abs(g.cx))}″`);
     }
     if(o.preview&&pr.id===printSel) s+=`<g transform="translate(${fx(g.cx)} ${fx(g.cy)}) rotate(${fx(g.ang)})"><rect x="${fx(-g.w/2)}" y="${fx(-g.h/2)}" width="${fx(g.w)}" height="${fx(g.h)}" fill="none" stroke="${PCOL}" stroke-width="0.05" stroke-dasharray="0.25 0.15"/></g>`;
     s+=ptag(g.kind==='torso'?Lx+0.45:g.cx, g.kind==='torso'?Ty+0.35:g.cy, n);
@@ -1584,8 +1604,8 @@ function printTable(x,y,t,p){
   const w=19, rh=1.35, tbc=`<tspan fill="${DIM}">[TBC]</tspan>`;
   let s=`<text x="${fx(x)}" y="${fx(y)}" font-size="0.5" font-weight="700" fill="#111">PRINT SPEC · ลายสกรีน (นิ้ว)</text>`;
   list.forEach((pr,i)=>{ const yy=y+0.6+i*rh, h=pr.w*pr.ratio, pi=posInfo(t,pr.pos), sl=pr.pos.startsWith('slv'), warn=printWarn(t,p,pr), back=pi[2]==='back';
-    const xs=Math.abs(+pr.x)<0.05?'กึ่งกลาง CF':`ห่าง CF ${fmt(Math.abs(+pr.x))}″ ${(+pr.x>0)!==back?'(ซ้ายผู้สวม)':'(ขวาผู้สวม)'}`;
-    const ps=sl?`ห่างตะเข็บไหล่ ${fmt(+pr.y)}″ ตามแนวแขน`:`ห่าง${T[t].cat==='top'?' HPS':'ขอบเอว'} ${fmt(+pr.y)}″ · ${xs}`;
+    const cl=back?'CB':'CF', xs=Math.abs(+pr.x)<0.05?`กึ่งกลาง ${cl}`:`ห่าง ${cl} ${fmt(Math.abs(+pr.x))}″ ${(+pr.x>0)!==back?'(ซ้ายผู้สวม)':'(ขวาผู้สวม)'}`;
+    const ps=sl?`ห่างตะเข็บไหล่ ${fmt(+pr.y)}″ ตามแนวแขน`:T[t].cat==='top'?`ใต้คอ${back?'หลังตรง CB':'หน้าตรง CF'} ${fmt(prShownY(t,p,pr))}″ · ${xs}`:`ห่างขอบเอว ${fmt(+pr.y)}″ · ${xs}`;
     s+=`<rect x="${fx(x)}" y="${fx(yy)}" width="${w}" height="${rh}" fill="${i%2?'#fff':'#f3f8fe'}"/>`+ptag(x+0.5,yy+rh/2,i+1);
     s+=`<text x="${fx(x+1.1)}" y="${fx(yy+0.55)}" font-size="0.42" font-weight="700" fill="#111">${esc(pr.name)} · ${esc(pi[1])} · ${fmt(pr.w)}″ × ${fmt(h)}″ (${cm(pr.w)} × ${cm(h)} ซม.)${pr.rot?` · หมุน ${pr.rot}°`:''}</text>`;
     s+=`<text x="${fx(x+1.1)}" y="${fx(yy+1.1)}" font-size="0.36" fill="#6e6c68">${esc(ps)} · เทคนิค: ${pr.tech?esc(pr.tech):tbc} · สี: ${pr.ink?esc(pr.ink)+(pr.inkAuto!==false?' (ค่าสีบนจอ ยืนยันกับโรงสกรีน)':''):tbc}${warn.length?`<tspan fill="${DIM}" font-weight="700"> · ⚠ ${esc(warn.join(', '))}</tspan>`:''}</text>`; });
@@ -1773,9 +1793,9 @@ function buildPrints(){
   if(!pr) return;
   $('prPos').innerHTML=PRINT_POS[T[t].cat].map(o=>`<option value="${o[0]}">${o[1]}</option>`).join(''); $('prPos').value=pr.pos;
   $('prTech').innerHTML=PR_TECH.map(o=>`<option value="${esc(o)}">${o?esc(o):'ยังไม่ระบุ [TBC]'}</option>`).join(''); $('prTech').value=pr.tech||'';
-  $('prName').value=pr.name; $('prW').value=fmt(pr.w); $('prH').value=fmt(pr.w*pr.ratio); $('prY').value=fmt(+pr.y); $('prX').value=fmt(+pr.x);
+  $('prName').value=pr.name; $('prW').value=fmt(pr.w); $('prH').value=fmt(pr.w*pr.ratio); $('prY').value=fmt(prShownY(t,state.params[t],pr)); $('prX').value=fmt(+pr.x);
   const sl=pr.pos.startsWith('slv');
-  $('prYLab').textContent=sl?'ห่างตะเข็บไหล่ตามแนวแขน (นิ้ว)':T[t].cat==='top'?'ห่างจาก HPS ลงมา (นิ้ว)':'ห่างจากขอบเอวลงมา (นิ้ว)';
+  $('prYLab').textContent=sl?'ห่างตะเข็บไหล่ตามแนวแขน (นิ้ว)':T[t].cat==='top'?(prView(t,pr)==='back'?'ห่างใต้คอหลัง ตรง CB (นิ้ว)':'ห่างใต้คอหน้า ตรง CF (นิ้ว)'):'ห่างจากขอบเอวลงมา (นิ้ว)';
   $('prXLab').textContent=sl?'เลื่อนขวางแขน (นิ้ว)':'ห่างจากกลาง CF (นิ้ว, + = ขวาของภาพ)';
   $('prRot').value=pr.rot||0; $('prRotV').textContent=(pr.rot||0)+'°';
   const op=pr.op==null?100:+pr.op; $('prOp').value=op; $('prOpV').textContent=op+'%'; $('prMul').checked=!!pr.mul; $('prInk').value=pr.ink||''; $('prInkAuto').classList.toggle('hide',pr.inkAuto!==false);
@@ -1790,7 +1810,7 @@ $('prFile').onchange=async e=>{ const f=e.target.files[0]; e.target.value=''; if
   toast('กำลังอ่านไฟล์ลาย…');
   try{ const a=await readArt(f), t=state.type, p=state.params[t], list=printsOf(t);
     const pos=T[t].cat==='top'?(list.some(x=>x.pos==='cchest')?'fullback':'cchest'):'legL', pl=presetPlace(t,p,pos);
-    const pr={id:Date.now().toString(36),name:a.name,src:a.src,ratio:a.ratio,w:a.inW?Math.round(a.inW*100)/100:pl.w,fileW:a.inW?Math.round(a.inW*100)/100:null,pos,x:pl.x,y:pl.y,rot:0,op:100,mul:false,tech:'',ink:''};
+    const pr={id:Date.now().toString(36),name:a.name,src:a.src,ratio:a.ratio,w:a.inW?Math.round(a.inW*100)/100:pl.w,fileW:a.inW?Math.round(a.inW*100)/100:null,pos,x:pl.x,y:pl.y,yn:pl.yn,rot:0,op:100,mul:false,tech:'',ink:''};
     try{ const pl=await artPalette(pr.src); pr.cm={mode:'orig',pal:pl.pal,map:pl.pal.slice(),cover:pl.cover,many:pl.many}; autoInk(pr); }catch(e){}
     list.push(pr); printSel=pr.id; prSave(); buildPrints(); render();
     toast(a.inW?`ใส่ลายแล้ว ขนาดจริงจากไฟล์ ${fmt(pr.w)}″ × ${fmt(pr.w*pr.ratio)}″`:`ใส่ลายแล้ว ไฟล์ไม่มีขนาดจริง ตั้งกว้าง ${fmt(pr.w)}″ ไว้ก่อน แก้ได้ในช่อง "กว้าง"`);
@@ -1801,10 +1821,11 @@ $('prList').addEventListener('click',e=>{ const s=e.target.dataset.psel, d=e.tar
   if(d&&armed(e.target,'กดอีกครั้งเพื่อลบ')){ prints[state.type]=printsOf(state.type).filter(x=>x.id!==d); if(printSel===d) printSel=null; prSave(); buildPrints(); render(); }
 });
 $('prName').addEventListener('input',e=>prSet('name',e.target.value.trim()||'ลาย'));
-$('prPos').addEventListener('change',e=>{ const pr=curPrint(); if(!pr) return; const pl=presetPlace(state.type,state.params[state.type],e.target.value); pr.pos=e.target.value; pr.x=pl.x; pr.y=pl.y; if(!pr.fileW) pr.w=pl.w; pr.rot=0; prSave(); buildPrints(); render(); });
+$('prPos').addEventListener('change',e=>{ const pr=curPrint(); if(!pr) return; const pl=presetPlace(state.type,state.params[state.type],e.target.value); pr.pos=e.target.value; pr.x=pl.x; if(pl.yn!=null){ pr.yn=pl.yn; delete pr.y; } else { pr.y=pl.y; delete pr.yn; } if(!pr.fileW) pr.w=pl.w; pr.rot=0; prSave(); buildPrints(); render(); });
 $('prW').addEventListener('input',e=>{ const v=+e.target.value; if(v>=0.25){ prSet('w',v); $('prH').value=fmt(v*curPrint().ratio); } });
 $('prH').addEventListener('input',e=>{ const v=+e.target.value, pr=curPrint(); if(pr&&v>=0.25){ prSet('w',v/pr.ratio); $('prW').value=fmt(pr.w); } });
-for(const [id,k] of [['prY','y'],['prX','x']]) $(id).addEventListener('input',e=>{ const v=+e.target.value; if(isFinite(v)) prSet(k,v); });
+$('prY').addEventListener('input',e=>{ const v=+e.target.value, pr=curPrint(); if(!pr||!isFinite(v)) return; setPrY(state.type,state.params[state.type],pr,v); prSave(); render(); });
+$('prX').addEventListener('input',e=>{ const v=+e.target.value; if(isFinite(v)) prSet('x',v); });
 for(const id of ['prW','prH','prY','prX']) $(id).addEventListener('change',()=>buildPrints());
 $('prRot').addEventListener('input',e=>{ $('prRotV').textContent=e.target.value+'°'; prSet('rot',+e.target.value); });
 $('prOp').addEventListener('input',e=>{ $('prOpV').textContent=e.target.value+'%'; prSet('op',+e.target.value); });
@@ -1817,14 +1838,14 @@ for(const [id,k] of [['blkW','w'],['blkH','h']]) $(id).addEventListener('input',
 let pdrag=null;
 stage.addEventListener('pointerdown',ev=>{
   const pr=curPrint(); if(state.mode!=='flat'||!pr||calib||!$('prDrag').checked) return;
-  ev.stopImmediatePropagation(); pdrag={start:svgPt(ev),x:+pr.x||0,y:+pr.y||0}; stage.setPointerCapture(ev.pointerId);
+  ev.stopImmediatePropagation(); pdrag={start:svgPt(ev),x:+pr.x||0,y:prShownY(state.type,state.params[state.type],pr)}; stage.setPointerCapture(ev.pointerId);
 },true);
 stage.addEventListener('pointermove',ev=>{ if(!pdrag) return; ev.stopImmediatePropagation(); const pr=curPrint(); if(!pr){ pdrag=null; return; }
   const q=svgPt(ev); let dx=q[0]-pdrag.start[0], dy=q[1]-pdrag.start[1];
   if(pr.pos==='slvL'||pr.pos==='slvR'){ const g=printGeom(state.type,state.params[state.type],pr); const ds=pr.pos==='slvR'?[-g.dS[0],g.dS[1]]:g.dS, pp=pr.pos==='slvR'?[-g.perp[0],g.perp[1]]:g.perp;
     pr.y=Math.round((pdrag.y+dx*ds[0]+dy*ds[1])*8)/8; pr.x=Math.round((pdrag.x+dx*pp[0]+dy*pp[1])*8)/8; }
-  else { pr.x=Math.round((pdrag.x+dx)*8)/8; pr.y=Math.round((pdrag.y+dy)*8)/8; }
-  render(); $('prY').value=fmt(pr.y); $('prX').value=fmt(pr.x); },true);
+  else { pr.x=Math.round((pdrag.x+dx)*8)/8; setPrY(state.type,state.params[state.type],pr,Math.round((pdrag.y+dy)*8)/8); }
+  render(); $('prY').value=fmt(prShownY(state.type,state.params[state.type],pr)); $('prX').value=fmt(pr.x); },true);
 stage.addEventListener('pointerup',ev=>{ if(!pdrag) return; ev.stopImmediatePropagation(); pdrag=null; prSave(); buildPrints(); },true);
 
 /* ---------- งานทั้งชุด (Work) ----------
